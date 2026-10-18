@@ -6,7 +6,7 @@ import toast from 'react-hot-toast';
 import ProductCard from '../components/ProductCard.jsx';
 import { Button, EmptyState, ErrorPage, Field, Img, Modal, Skeleton, Stars, StatusTracker } from '../components/ui.jsx';
 import { useAsync, useSettings } from '../hooks/index.js';
-import { authService, orderService, reviewService } from '../services/index.js';
+import { authService, catalogService, orderService } from '../services/index.js';
 import { logout, setLang, setUser } from '../features/store.js';
 import { date, pkr } from '../utils/format.js';
 import { CITIES, PHONE_RE, isWithinReturnWindow } from '../utils/rules.js';
@@ -71,7 +71,7 @@ function OrderActions({ order, onChange }) {
   const submitReview = async () => {
     setBusy(true);
     try {
-      await reviewService.create({ productId: review.product, ...rv });
+      await catalogService.addReview(review.product, rv);
       toast.success('Thank you for your review');
       setReview(null);
     } catch (e) {
@@ -168,10 +168,11 @@ function Addresses() {
   const user = useSelector((s) => s.auth.user);
   const [form, setForm] = useState(null);
   const [busy, setBusy] = useState(false);
-  const saveAll = async (addresses) => {
+  const run = async (fn) => {
     setBusy(true);
     try {
-      dispatch(setUser((await authService.updateMe({ addresses })).user));
+      const { addresses } = await fn();
+      dispatch(setUser({ ...user, addresses }));
       toast.success(t('common.save'));
       setForm(null);
     } catch (e) {
@@ -182,8 +183,9 @@ function Addresses() {
   };
   const submit = () => {
     if (!form.name || !PHONE_RE.test(form.phone) || !form.street) return toast.error(t('errors.phone'));
-    const list = form._id ? user.addresses.map((a) => (a._id === form._id ? form : a)) : [...user.addresses, form];
-    saveAll(form.isDefault ? list.map((a) => ({ ...a, isDefault: a === form || a._id === form._id })) : list);
+    const { _id, label, name, phone, city, area, street, isDefault } = form;
+    const body = { label, name, phone, city, area, street, isDefault: !!isDefault };
+    run(() => (_id ? authService.updateAddress(_id, body) : authService.addAddress(body)));
   };
   return (
     <div>
@@ -195,8 +197,8 @@ function Addresses() {
             <p className="text-muted">{a.street}, {a.area}, {a.city}</p>
             <div className="mt-4 flex gap-4 text-xs underline">
               <button onClick={() => setForm(a)}>Edit</button>
-              {!a.isDefault && <button onClick={() => saveAll(user.addresses.map((x) => ({ ...x, isDefault: x._id === a._id })))}>{t('account.makeDefault')}</button>}
-              <button onClick={() => saveAll(user.addresses.filter((x) => x._id !== a._id))}>{t('account.delete')}</button>
+              {!a.isDefault && <button onClick={() => run(() => authService.updateAddress(a._id, { isDefault: true }))}>{t('account.makeDefault')}</button>}
+              <button onClick={() => run(() => authService.deleteAddress(a._id))}>{t('account.delete')}</button>
             </div>
           </div>
         ))}

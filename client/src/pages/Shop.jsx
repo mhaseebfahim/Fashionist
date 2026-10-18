@@ -4,13 +4,13 @@ import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { LayoutGrid, SlidersHorizontal, X } from 'lucide-react';
 import ProductCard from '../components/ProductCard.jsx';
-import { Button, CardSkeleton, EmptyState, Img } from '../components/ui.jsx';
+import { Button, CardSkeleton, EmptyState, Img, useMeta } from '../components/ui.jsx';
 import { useAsync } from '../hooks/index.js';
 import { catalogService } from '../services/index.js';
 import { colourHex, pkr, tr } from '../utils/format.js';
 
 const LIMIT = 12;
-const MULTI = ['sizes', 'colours', 'fabric'];
+const MULTI = ['size', 'colour', 'fabric'];
 
 export default function Shop({ search }) {
   const { t, i18n } = useTranslation();
@@ -26,7 +26,10 @@ export default function Shop({ search }) {
   const category = categorySlug || sp.get('category') || '';
   const page = +sp.get('page') || 1;
   const filterKey = [...sp.entries()].filter(([k]) => k !== 'page').map((e) => e.join('=')).join('&') + category;
-  const query = useMemo(() => ({ ...Object.fromEntries([...sp.entries()].filter(([k]) => k !== 'page')), category, limit: LIMIT }), [filterKey]); // eslint-disable-line
+  const query = useMemo(() => {
+    const { fabric, page: _p, ...rest } = Object.fromEntries(sp.entries());
+    return { ...rest, ...(fabric && { attr: { fabric } }), category, limit: LIMIT };
+  }, [filterKey]); // eslint-disable-line
 
   const cats = useAsync(() => catalogService.categories(), []);
   const facetsSrc = useAsync(() => catalogService.products({ category, limit: 48 }), [category]);
@@ -78,6 +81,7 @@ export default function Shop({ search }) {
   const setColsSaved = (n) => (setCols(n), localStorage.setItem('fashionist:cols', n));
 
   const title = search ? `“${sp.get('q') || ''}”` : catObj ? tr(catObj, 'name', i18n.language) : t('nav.shop');
+  useMeta(search ? `Search: ${sp.get('q') || ''}` : catObj?.name || 'Shop', catObj ? `Shop ${catObj.name} at Fashionist — Cash on Delivery across Pakistan.` : 'Shop the Fashionist collection.', catObj?.image);
   const gridCls = { 2: 'md:grid-cols-2', 3: 'md:grid-cols-3', 4: 'md:grid-cols-3 xl:grid-cols-4' }[cols];
 
   const Filters = (
@@ -100,14 +104,14 @@ export default function Shop({ search }) {
       </div>
       <div>
         <p className="label mb-4">{t('shop.size')}</p>
-        <div className="flex flex-wrap gap-2">{facets.sizes.map((s) => <button key={s} onClick={() => toggle('sizes', s)} className={`chip ${sp.get('sizes')?.split(',').includes(s) ? 'chip-active' : ''}`}>{s}</button>)}</div>
+        <div className="flex flex-wrap gap-2">{facets.sizes.map((s) => <button key={s} onClick={() => toggle('size', s)} className={`chip ${sp.get('size')?.split(',').includes(s) ? 'chip-active' : ''}`}>{s}</button>)}</div>
       </div>
       <div>
         <p className="label mb-4">{t('shop.colour')}</p>
         <div className="flex flex-wrap gap-3">
           {facets.colours.map((c) => {
-            const on = sp.get('colours')?.split(',').includes(c);
-            return <button key={c} onClick={() => toggle('colours', c)} title={c} aria-label={c} aria-pressed={on} className={`h-8 w-8 rounded-full border ${on ? 'ring-2 ring-fg ring-offset-2 ring-offset-bg' : 'border-line'}`} style={{ background: colourHex[c] || '#ccc' }} />;
+            const on = sp.get('colour')?.split(',').includes(c);
+            return <button key={c} onClick={() => toggle('colour', c)} title={c} aria-label={c} aria-pressed={on} className={`h-8 w-8 rounded-full border ${on ? 'ring-2 ring-fg ring-offset-2 ring-offset-bg' : 'border-line'}`} style={{ background: colourHex[c] || '#ccc' }} />;
           })}
         </div>
       </div>
@@ -154,7 +158,7 @@ export default function Shop({ search }) {
           <p className="hidden text-xs text-muted lg:block" aria-live="polite">{t('shop.results', { count: meta.total })}</p>
           <div className="flex items-center gap-5">
             <select value={sp.get('sort') || 'newest'} onChange={(e) => set('sort', e.target.value)} className="border-0 bg-transparent text-xs font-semibold uppercase tracking-label focus:outline-none" aria-label={t('shop.sort')}>
-              {[['newest', 'newest'], ['price-asc', 'priceAsc'], ['price-desc', 'priceDesc'], ['popular', 'popular'], ['rating', 'rating']].map(([v, k]) => <option key={v} value={v}>{t(`shop.${k}`)}</option>)}
+              {[['newest', 'newest'], ['priceAsc', 'priceAsc'], ['priceDesc', 'priceDesc'], ['popular', 'popular'], ['rating', 'rating']].map(([v, k]) => <option key={v} value={v}>{t(`shop.${k}`)}</option>)}
             </select>
             <div className="hidden items-center gap-1 md:flex" role="group" aria-label="Grid density">
               {[2, 3, 4].map((n) => (

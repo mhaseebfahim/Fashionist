@@ -1,6 +1,7 @@
 import { configureStore, createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import toast from 'react-hot-toast';
-import { authService, wishlistService } from '../services/index.js';
+import { authService, cmsService, wishlistService } from '../services/index.js';
+import { cmsDefaults } from '../cms/defaults.js';
 import { TOKEN_KEY } from '../services/api.js';
 import { MAX_QTY } from '../utils/rules.js';
 
@@ -100,6 +101,24 @@ const wishlistSlice = createSlice({
   },
 });
 
+/* ---------------- cms (theme, navigation, announcement, homepage) ---------------- */
+// Seed defaults render instantly; the live (or preview) bundle replaces them once loaded.
+const isPreview = () => new URLSearchParams(window.location.search).has('preview');
+export const loadCms = createAsyncThunk('cms/load', async (_, { getState }) => {
+  const preview = isPreview() && getState().auth.user?.role === 'admin';
+  return { ...(await cmsService.get(preview)), preview };
+});
+const cmsSlice = createSlice({
+  name: 'cms',
+  initialState: { ...cmsDefaults, sections: cmsDefaults.sections.map((s, i) => ({ _id: `default-${i}`, ...s })), loaded: false, preview: false },
+  reducers: {},
+  extraReducers: (b) => {
+    b.addCase(loadCms.fulfilled, (s, { payload }) => ({ ...s, ...payload, loaded: true })).addCase(loadCms.rejected, (s) => {
+      s.loaded = true; // keep seed fallback
+    });
+  },
+});
+
 /* ---------------- ui ---------------- */
 const uiSlice = createSlice({
   name: 'ui',
@@ -120,7 +139,7 @@ export const { addItem, setQty, removeItem, clearCart } = cartSlice.actions;
 export const { setCartOpen, setSearchOpen, setMenuOpen, setLang, toggleDark, addRecent, clearRecent } = uiSlice.actions;
 
 export const store = configureStore({
-  reducer: { auth: authSlice.reducer, cart: cartSlice.reducer, wishlist: wishlistSlice.reducer, ui: uiSlice.reducer },
+  reducer: { cms: cmsSlice.reducer, auth: authSlice.reducer, cart: cartSlice.reducer, wishlist: wishlistSlice.reducer, ui: uiSlice.reducer },
 });
 
 store.subscribe(() => {

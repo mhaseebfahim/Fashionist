@@ -7,7 +7,8 @@
     "dev": "node --watch server.js",
     "start": "node server.js",
     "seed": "node scripts/seed.js",
-    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand"
+    "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
+    "test:prepare": "node scripts/fetch-mongod.js"
   },
   "engines": {
     "node": ">=20"
@@ -38,5 +39,10 @@
     "testEnvironment": "node",
     "transform": {},
     "testTimeout": 60000
+  },
+  "config": {
+    "mongodbMemoryServer": {
+      "version": "7.0.14"
+    }
   }
 }

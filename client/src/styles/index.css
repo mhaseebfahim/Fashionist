@@ -17,7 +17,7 @@
 @layer components {
   .container-site { @apply mx-auto w-full max-w-site px-4 sm:px-6 lg:px-10; }
   .label { @apply text-[11px] font-semibold uppercase tracking-label; }
-  .btn { @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 text-xs font-semibold uppercase tracking-label transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn { border-radius: var(--btn-radius); @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 text-xs font-semibold uppercase tracking-label transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-50; }
   .btn-primary { @apply btn bg-rose text-white hover:bg-rose-deep; }
   .btn-ink { @apply btn bg-fg text-bg hover:bg-rose; }
   .btn-outline { @apply btn border border-fg text-fg hover:bg-fg hover:text-bg; }

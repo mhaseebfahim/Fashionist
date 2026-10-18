@@ -1,6 +1,7 @@
 // Mirrors server/utils (orderStatus + totals). The client uses these only for previews and
 // for the mock adapter — the real server always recomputes and enforces.
 export const ORDER_FLOW = ['Pending', 'Confirmed', 'Shipped', 'Delivered'];
+export const ORDER_STATUSES = ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Returned'];
 export const TRANSITIONS = {
   Pending: ['Confirmed', 'Cancelled'],
   Confirmed: ['Shipped', 'Cancelled'],
@@ -21,7 +22,7 @@ export function shippingFeeFor(city, s, subtotal) {
 }
 
 export function couponDiscount(c, subtotal) {
-  if (!c) return 0;
+  if (!c || c.type === 'freeship') return 0;
   let d = c.type === 'percent' ? Math.round((subtotal * c.value) / 100) : c.value;
   if (c.maxDiscount) d = Math.min(d, c.maxDiscount);
   return Math.min(d, subtotal);
@@ -38,3 +39,4 @@ export function couponError(c, userId, subtotal) {
 
 export const PHONE_RE = /^03\d{9}$/;
 export const CITIES = ['Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta', 'Sialkot', 'Gujranwala', 'Hyderabad', 'Bahawalpur', 'Sargodha', 'Sukkur', 'Abbottabad', 'Mardan', 'Sahiwal', 'Rahim Yar Khan', 'Dera Ghazi Khan', 'Gujrat'];
+export const ATTR_FILTERS = ['fabric', 'pieces', 'dupatta', 'soldBy', 'fit', 'work', 'material', 'age'];

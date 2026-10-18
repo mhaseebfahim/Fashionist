@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Banknote, ChevronLeft, ChevronRight, Heart, X } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Accordion, ErrorPage, Img, Modal, Skeleton, Stars } from '../components/ui.jsx';
+import { Accordion, ErrorPage, Img, Modal, Skeleton, Stars, useMeta } from '../components/ui.jsx';
 import { Stepper } from '../components/CartDrawer.jsx';
 import Rail from '../components/Rail.jsx';
 import { cartLine } from '../components/ProductCard.jsx';
@@ -53,7 +53,9 @@ function Gallery({ images, title }) {
   );
 }
 
-function ReviewSummary({ product, reviews }) {
+function ReviewSummary({ product }) {
+  const { data } = useAsync(() => catalogService.reviews(product._id), [product._id]);
+  const reviews = data?.reviews || [];
   const { t } = useTranslation();
   const dist = [5, 4, 3, 2, 1].map((n) => [n, reviews.filter((r) => r.rating === n).length]);
   return (
@@ -102,6 +104,7 @@ export default function Product() {
   const [guide, setGuide] = useState(false);
   const [city, setCity] = useState('Lahore');
   const p = data?.product;
+  useMeta(p?.seo?.metaTitle?.replace(/ \| Fashionist$/, '') || p?.title, p?.seo?.metaDescription || p?.description, p?.images?.[0]);
   const wished = useSelector((s) => p && s.wishlist.items.some((w) => w._id === p._id));
 
   useEffect(() => {
@@ -196,7 +199,7 @@ export default function Product() {
         </div>
       </div>
 
-      <ReviewSummary product={p} reviews={data.reviews} />
+      <ReviewSummary product={p} />
       <section className="container-site py-16"><Rail loading={look.loading} products={look.data?.products.filter((x) => x._id !== p._id) || []} title={<h2 className="text-4xl md:text-5xl">{t('product.completeLook')}</h2>} /></section>
       {data.related.length > 0 && <section className="container-site pb-24"><Rail products={data.related} title={<h2 className="text-4xl md:text-5xl">{t('product.alsoLike')}</h2>} /></section>}
 

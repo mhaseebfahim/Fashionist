@@ -6,9 +6,9 @@ import { motion } from 'framer-motion';
 import { Banknote, Check } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CartLines, FreeShippingBar } from '../components/CartDrawer.jsx';
-import { Button, EmptyState, Field, Img, Spinner, StatusTracker } from '../components/ui.jsx';
+import { Button, EmptyState, Field, Img, Spinner, StatusTracker, useMeta } from '../components/ui.jsx';
 import { useAsync, useSettings } from '../hooks/index.js';
-import { couponService, orderService } from '../services/index.js';
+import { orderService } from '../services/index.js';
 import { clearCart } from '../features/store.js';
 import { pkr } from '../utils/format.js';
 import { CITIES, PHONE_RE, shippingFeeFor } from '../utils/rules.js';
@@ -24,7 +24,7 @@ function CouponField({ subtotal, city, value, onChange }) {
     if (!user) return toast.error(t('checkout.loginFirst'));
     setLoading(true);
     try {
-      const r = await couponService.validate({ code, subtotal, city });
+      const r = await orderService.validateCoupon({ code, subtotal, city });
       onChange(r);
       toast.success(`${r.code} applied`);
     } catch (e) {
@@ -72,6 +72,7 @@ const readCoupon = () => {
 };
 
 export function CartPage() {
+  useMeta('Your Bag');
   const { t } = useTranslation();
   const items = useSelector((s) => s.cart.items);
   const [coupon, setCoupon] = useState(readCoupon);
@@ -101,6 +102,7 @@ export function CartPage() {
 }
 
 export function Checkout() {
+  useMeta('Checkout');
   const { t } = useTranslation();
   const dispatch = useDispatch();
   const nav = useNavigate();
@@ -117,7 +119,7 @@ export function Checkout() {
   const address = selected === 'new' ? form : saved.find((a) => a._id === selected);
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
   const discount = coupon?.discount || 0;
-  const shipping = settings ? shippingFeeFor(address?.city, settings, subtotal - discount) : null;
+  const shipping = coupon?.freeShipping ? 0 : settings ? shippingFeeFor(address?.city, settings, subtotal - discount) : null;
 
   if (!items.length) return <EmptyState title={t('cart.empty')} action={<Link to="/shop" className="btn-ink">{t('cart.continue')}</Link>} />;
 

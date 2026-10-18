@@ -3,8 +3,9 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import StoreLayout from './layouts/StoreLayout.jsx';
 import { ErrorPage, RequireAuth, Spinner } from './components/ui.jsx';
-import { fetchMe, loadWishlist } from './features/store.js';
+import { fetchMe, loadCms, loadWishlist } from './features/store.js';
 import { TOKEN_KEY } from './services/api.js';
+import { applyTheme } from './utils/theme.js';
 import Home from './pages/Home.jsx';
 import Shop from './pages/Shop.jsx';
 import Product from './pages/Product.jsx';
@@ -12,6 +13,7 @@ import { CartPage, Checkout, OrderSuccess } from './pages/Checkout.jsx';
 import { Login, Register, ForgotPassword, ResetPassword } from './pages/Auth.jsx';
 import StaticPage from './pages/StaticPage.jsx';
 
+// Code-split: customers never download the admin bundle.
 const Account = lazy(() => import('./pages/Account.jsx'));
 const Admin = lazy(() => import('./admin/AdminApp.jsx'));
 
@@ -20,17 +22,28 @@ const Loading = () => <div className="grid min-h-[60vh] place-items-center"><Spi
 export default function App() {
   const dispatch = useDispatch();
   const { pathname } = useLocation();
-  const user = useSelector((s) => s.auth.user);
+  const { user, ready } = useSelector((s) => s.auth);
   const dark = useSelector((s) => s.ui.dark);
+  const theme = useSelector((s) => s.cms.theme);
 
   useEffect(() => {
     if (localStorage.getItem(TOKEN_KEY)) dispatch(fetchMe());
+  }, [dispatch]);
+  // CMS loads once auth is known (admins may request draft preview inside the builder iframe).
+  useEffect(() => {
+    if (ready) dispatch(loadCms());
+  }, [ready, dispatch]);
+  useEffect(() => {
+    const onMsg = (e) => e.origin === window.location.origin && e.data === 'fashionist:cms-refresh' && dispatch(loadCms());
+    window.addEventListener('message', onMsg);
+    return () => window.removeEventListener('message', onMsg);
   }, [dispatch]);
   useEffect(() => {
     if (user?.role === 'customer') dispatch(loadWishlist());
   }, [user, dispatch]);
   useEffect(() => window.scrollTo(0, 0), [pathname]);
-  useEffect(() => document.documentElement.classList.toggle('dark', dark), [dark]);
+  useEffect(() => applyTheme(theme), [theme]);
+  useEffect(() => document.documentElement.classList.toggle('dark', dark && theme.darkModeEnabled !== false && !pathname.startsWith('/admin')), [dark, theme, pathname]);
 
   return (
     <Suspense fallback={<Loading />}>

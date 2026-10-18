@@ -16,6 +16,9 @@
   --line: var(--hairline);
   --muted: var(--stone);
 
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: Manrope, system-ui, sans-serif;
+  --btn-radius: 0px;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
 }
 

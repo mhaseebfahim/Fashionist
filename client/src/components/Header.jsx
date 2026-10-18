@@ -7,32 +7,26 @@ import { Heart, Menu, Moon, Search, ShoppingBag, Sun, User, X } from 'lucide-rea
 import { Img, Logo } from './ui.jsx';
 import { useScrolled } from '../hooks/index.js';
 import { setCartOpen, setLang, setMenuOpen, setSearchOpen, toggleDark } from '../features/store.js';
-import { IMG } from '../services/mock/seedData.js';
 
-const MENU = [
-  { key: 'women', image: IMG.w3, links: [['Lawn', 'lawn'], ['Silk', 'silk'], ['Chiffon', 'chiffon'], ['Co-ords', 'casual']] },
-  { key: 'men', image: IMG.m3, links: [['Kurtas', 'kurta'], ['Shalwar Kameez', 'classic'], ['Waistcoats', 'festive']] },
-  { key: 'kids', image: IMG.k2, links: [['Girls', 'frock'], ['Boys', 'kurta']] },
-  { key: 'unstitched', image: IMG.f1, links: [['Jacquard', 'jacquard'], ['Raw Silk', 'silk']] },
-  { key: 'accessories', image: IMG.a2, links: [['Jewellery', 'jewellery'], ['Bags', 'bags']] },
-];
+const L = (item, lang, key = 'label') => (lang === 'ur' && item[`${key}Ur`]) || item[key];
 
 export function AnnouncementBar() {
-  const { t } = useTranslation();
+  const { i18n } = useTranslation();
+  const bar = useSelector((s) => s.cms.announcement);
   const [hidden, setHidden] = useState(() => sessionStorage.getItem('fashionist:announce') === '0');
-  if (hidden) return null;
-  const items = t('announce');
-  const row = [...items, ...items, ...items];
+  if (hidden || !bar?.enabled || !bar.messages?.length) return null;
+  const row = Array.from({ length: Math.max(2, Math.ceil(8 / bar.messages.length)) }, () => bar.messages).flat();
+  const Inner = bar.link ? Link : 'div';
   return (
-    <div className="relative z-50 overflow-hidden bg-ink text-ivory">
-      <div className="flex w-max animate-marquee py-2 hover:[animation-play-state:paused]" dir="ltr">
-        {[...row, ...row].map((s, i) => (
+    <div className="relative z-50 overflow-hidden text-ivory" style={{ background: bar.background || '#141414' }}>
+      <Inner to={bar.link} className="flex w-max animate-marquee py-2 hover:[animation-play-state:paused]" dir="ltr">
+        {[...row, ...row].map((m, i) => (
           <span key={i} className="label mx-6 whitespace-nowrap text-[10px]">
-            {s} <span className="ms-6 text-rose">◆</span>
+            {L(m, i18n.language, 'text')} <span className="ms-6 text-rose">◆</span>
           </span>
         ))}
-      </div>
-      <button aria-label="Dismiss announcement" onClick={() => (sessionStorage.setItem('fashionist:announce', '0'), setHidden(true))} className="absolute end-2 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center bg-ink">
+      </Inner>
+      <button aria-label="Dismiss announcement" onClick={() => (sessionStorage.setItem('fashionist:announce', '0'), setHidden(true))} className="absolute end-0 top-0 grid h-full w-9 place-items-center" style={{ background: bar.background || '#141414' }}>
         <X className="h-3.5 w-3.5" />
       </button>
     </div>
@@ -41,6 +35,7 @@ export function AnnouncementBar() {
 
 export default function Header() {
   const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const dispatch = useDispatch();
   const { pathname } = useLocation();
   const scrolled = useScrolled(30);
@@ -49,9 +44,11 @@ export default function Header() {
   const wish = useSelector((s) => s.wishlist.items.length);
   const { user } = useSelector((s) => s.auth);
   const { menuOpen, dark } = useSelector((s) => s.ui);
-  const overHero = pathname === '/' && !scrolled && !mega;
+  const menu = useSelector((s) => s.cms.navigation?.header || []);
+  const darkOk = useSelector((s) => s.cms.theme?.darkModeEnabled !== false);
+  const overHero = pathname === '/' && !scrolled && mega === null;
   const switchLang = () => {
-    const l = i18n.language === 'ur' ? 'en' : 'ur';
+    const l = lang === 'ur' ? 'en' : 'ur';
     i18n.changeLanguage(l);
     dispatch(setLang(l));
   };
@@ -61,6 +58,7 @@ export default function Header() {
   }, [pathname, dispatch]);
 
   const iconBtn = 'grid h-10 w-10 place-items-center relative transition-opacity hover:opacity-70';
+  const open = mega !== null && menu[mega];
   return (
     <header className={`sticky top-0 z-40 transition-colors duration-500 ${overHero ? 'bg-transparent text-ivory' : 'border-b border-line bg-bg text-fg'} ${pathname === '/' ? '-mb-[72px]' : ''}`} onMouseLeave={() => setMega(null)}>
       <div className="container-site grid h-[72px] grid-cols-[1fr_auto_1fr] items-center">
@@ -69,9 +67,9 @@ export default function Header() {
             <Menu className="h-5 w-5" />
           </button>
           <nav className="hidden items-center gap-6 lg:flex" aria-label="Primary">
-            {MENU.map((m) => (
-              <NavLink key={m.key} to={`/shop/${m.key}`} onMouseEnter={() => setMega(m.key)} onFocus={() => setMega(m.key)} className="label link-grow text-[11px]">
-                {t(`nav.${m.key}`)}
+            {menu.map((m, i) => (
+              <NavLink key={m.link + i} to={m.link} onMouseEnter={() => setMega(m.children?.length || m.image ? i : null)} onFocus={() => setMega(m.children?.length || m.image ? i : null)} className="label link-grow text-[11px]">
+                {L(m, lang)}
               </NavLink>
             ))}
           </nav>
@@ -79,8 +77,8 @@ export default function Header() {
         <Logo size="text-lg sm:text-xl" />
         <div className="flex items-center justify-end">
           <button className={iconBtn} aria-label={t('nav.search')} onClick={() => dispatch(setSearchOpen(true))}><Search className="h-[18px] w-[18px]" /></button>
-          <button className={`${iconBtn} hidden sm:grid text-xs font-semibold`} onClick={switchLang} aria-label="Switch language">{i18n.language === 'ur' ? 'EN' : 'اردو'}</button>
-          <button className={`${iconBtn} hidden md:grid`} onClick={() => dispatch(toggleDark())} aria-label="Toggle dark mode">{dark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}</button>
+          <button className={`${iconBtn} hidden text-xs font-semibold sm:grid`} onClick={switchLang} aria-label="Switch language">{lang === 'ur' ? 'EN' : 'اردو'}</button>
+          {darkOk && <button className={`${iconBtn} hidden md:grid`} onClick={() => dispatch(toggleDark())} aria-label="Toggle dark mode">{dark ? <Sun className="h-[18px] w-[18px]" /> : <Moon className="h-[18px] w-[18px]" />}</button>}
           <Link to={user ? (user.role === 'admin' ? '/admin' : '/account') : '/login'} className={`${iconBtn} hidden sm:grid`} aria-label={t('nav.account')}><User className="h-[18px] w-[18px]" /></Link>
           <Link to="/account/wishlist" className={`${iconBtn} hidden sm:grid`} aria-label={t('nav.wishlist')}>
             <Heart className="h-[18px] w-[18px]" />
@@ -94,37 +92,35 @@ export default function Header() {
       </div>
 
       <AnimatePresence>
-        {mega && (
+        {open && (
           <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="absolute inset-x-0 top-full hidden border-b border-line bg-bg text-fg lg:block">
-            {MENU.filter((m) => m.key === mega).map((m) => (
-              <div key={m.key} className="container-site grid grid-cols-12 gap-10 py-10">
-                <div className="col-span-3">
-                  <p className="label mb-5 text-gold">{t(`nav.${m.key}`)}</p>
-                  <ul className="space-y-3 font-display text-2xl">
-                    <li><Link className="link-grow" to={`/shop/${m.key}`}>{t('shop.all')}</Link></li>
-                    {m.links.map(([label, q]) => (
-                      <li key={label}><Link className="link-grow" to={`/search?q=${q}`}>{label}</Link></li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="col-span-3">
-                  <p className="label mb-5 text-gold">{t('nav.newIn')}</p>
-                  <ul className="space-y-3 text-sm">
-                    <li><Link className="link-grow" to="/search?q=eid">The Eid Edit</Link></li>
-                    <li><Link className="link-grow" to="/search?q=new">Just landed</Link></li>
-                    <li><Link className="link-grow" to="/shop?sort=popular">Best sellers</Link></li>
-                  </ul>
-                </div>
-                <Link to={`/shop/${m.key}`} className="group col-span-6 grid grid-cols-2 gap-6">
-                  <Img src={m.image} alt="" className="card-img aspect-[4/5]" />
+            <div className="container-site grid grid-cols-12 gap-10 py-10">
+              <div className="col-span-4">
+                <p className="label mb-5 text-gold">{L(open, lang)}</p>
+                <ul className="space-y-3 font-display text-2xl">
+                  <li><Link className="link-grow" to={open.link}>{t('shop.all')}</Link></li>
+                  {open.children?.map((c) => <li key={c.link}><Link className="link-grow" to={c.link}>{L(c, lang)}</Link></li>)}
+                </ul>
+              </div>
+              <div className="col-span-2">
+                <p className="label mb-5 text-gold">{t('nav.newIn')}</p>
+                <ul className="space-y-3 text-sm">
+                  <li><Link className="link-grow" to="/search?q=eid">The Eid Edit</Link></li>
+                  <li><Link className="link-grow" to="/shop?sort=newest">Just landed</Link></li>
+                  <li><Link className="link-grow" to="/shop?sort=popular">Most loved</Link></li>
+                </ul>
+              </div>
+              {open.image && (
+                <Link to={open.link} className="group col-span-6 grid grid-cols-2 gap-6">
+                  <Img src={open.image} alt="" className="card-img aspect-[4/5]" />
                   <div className="self-end">
                     <p className="label text-gold">SS 2026</p>
-                    <p className="mt-2 font-display text-4xl">{t(`nav.${m.key}`)} — the new edit</p>
+                    <p className="mt-2 font-display text-4xl">{L(open, lang)} — the new edit</p>
                     <span className="label link-grow mt-4 inline-block">{t('home.viewAll')}</span>
                   </div>
                 </Link>
-              </div>
-            ))}
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -132,19 +128,24 @@ export default function Header() {
       <AnimatePresence>
         {menuOpen && (
           <motion.div className="fixed inset-0 z-[60] bg-ink/40 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => dispatch(setMenuOpen(false))}>
-            <motion.nav initial={{ x: '-100%' }} animate={{ x: 0 }} exit={{ x: '-100%' }} transition={{ ease: [0.22, 1, 0.36, 1], duration: 0.5 }} className="h-full w-[86%] max-w-sm overflow-auto bg-bg p-6 text-fg rtl:ms-auto" onClick={(e) => e.stopPropagation()}>
+            <motion.nav initial={{ x: lang === 'ur' ? '100%' : '-100%' }} animate={{ x: 0 }} exit={{ x: lang === 'ur' ? '100%' : '-100%' }} transition={{ ease: [0.22, 1, 0.36, 1], duration: 0.5 }} className="h-full w-[86%] max-w-sm overflow-auto bg-bg p-6 text-fg" onClick={(e) => e.stopPropagation()}>
               <div className="mb-10 flex items-center justify-between">
                 <Logo size="text-base" />
                 <button onClick={() => dispatch(setMenuOpen(false))} aria-label={t('common.close')}><X className="h-5 w-5" /></button>
               </div>
-              <ul className="space-y-5 font-display text-4xl">
-                {MENU.map((m) => <li key={m.key}><Link to={`/shop/${m.key}`}>{t(`nav.${m.key}`)}</Link></li>)}
+              <ul className="space-y-5">
+                {menu.map((m) => (
+                  <li key={m.link}>
+                    <Link to={m.link} className="font-display text-4xl">{L(m, lang)}</Link>
+                    {m.children?.length > 0 && <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted">{m.children.map((c) => <Link key={c.link} to={c.link}>{L(c, lang)}</Link>)}</div>}
+                  </li>
+                ))}
               </ul>
               <div className="mt-10 space-y-4 border-t border-line pt-8 text-sm">
                 <Link to={user ? '/account' : '/login'} className="flex items-center gap-3"><User className="h-4 w-4" />{t('nav.account')}</Link>
                 <Link to="/account/wishlist" className="flex items-center gap-3"><Heart className="h-4 w-4" />{t('nav.wishlist')}</Link>
-                <button onClick={switchLang} className="flex items-center gap-3">{i18n.language === 'ur' ? 'English' : 'اردو'}</button>
-                <button onClick={() => dispatch(toggleDark())} className="flex items-center gap-3">{dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} Theme</button>
+                <button onClick={switchLang} className="flex items-center gap-3">{lang === 'ur' ? 'English' : 'اردو'}</button>
+                {darkOk && <button onClick={() => dispatch(toggleDark())} className="flex items-center gap-3">{dark ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />} Theme</button>}
               </div>
             </motion.nav>
           </motion.div>

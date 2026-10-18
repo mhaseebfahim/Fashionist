@@ -14,17 +14,47 @@ export function Diamond({ className = 'h-2.5 w-2.5' }) {
   );
 }
 
-export function Logo({ className = '', size = 'text-xl' }) {
+export function Logo({ className = '', size = 'text-xl', to = '/' }) {
+  const logo = useSelector((s) => s.cms?.theme?.logo);
   return (
-    <Link to="/" aria-label="Fashionist home" className={`inline-flex items-center gap-2.5 ${className}`}>
-      <Diamond />
-      <span dir="ltr" className={`font-display font-semibold tracking-brand ${size}`}>FASHIONIST</span>
+    <Link to={to} aria-label="Fashionist home" className={`inline-flex items-center gap-2.5 ${className}`}>
+      {logo ? (
+        <img src={cdn(logo, 320)} alt="Fashionist" className="h-8 w-auto" width="160" height="32" />
+      ) : (
+        <>
+          <Diamond />
+          <span dir="ltr" className={`font-display font-semibold tracking-brand ${size}`}>FASHIONIST</span>
+        </>
+      )}
     </Link>
   );
 }
 
+/** Adds Cloudinary f_auto,q_auto (+ width) to Cloudinary URLs; other URLs pass through. */
+export const cdn = (url, w) => (typeof url === 'string' && url.includes('res.cloudinary.com') && !url.includes('/f_auto') ? url.replace('/upload/', `/upload/f_auto,q_auto${w ? `,w_${w}` : ''}/`) : url);
+
+/** Sets <title>, description and Open Graph tags for the current page. */
+export function useMeta(title, description, image) {
+  useEffect(() => {
+    const full = title ? `${title} — Fashionist` : 'Fashionist — Wear Your Story';
+    document.title = full;
+    const set = (attr, key, value) => {
+      if (!value) return;
+      let el = document.head.querySelector(`meta[${attr}="${key}"]`);
+      if (!el) document.head.appendChild((el = document.createElement('meta')));
+      el.setAttribute(attr, key);
+      el.setAttribute('content', value);
+    };
+    set('name', 'description', description);
+    set('property', 'og:title', full);
+    set('property', 'og:description', description);
+    set('property', 'og:image', image);
+    set('property', 'og:url', window.location.href);
+  }, [title, description, image]);
+}
+
 /** Lazy image with blur-up fade and a branded fallback when the source fails. */
-export function Img({ src, alt = '', className = '', imgClass = '', eager = false, ...rest }) {
+export function Img({ src, alt = '', className = '', imgClass = '', eager = false, w = 600, h = 800, ...rest }) {
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   return (
@@ -35,8 +65,10 @@ export function Img({ src, alt = '', className = '', imgClass = '', eager = fals
         </div>
       ) : (
         <img
-          src={src}
+          src={cdn(src, w * 2)}
           alt={alt}
+          width={w}
+          height={h}
           loading={eager ? 'eager' : 'lazy'}
           decoding="async"
           onLoad={() => setLoaded(true)}

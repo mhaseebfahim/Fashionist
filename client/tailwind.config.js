@@ -25,8 +25,8 @@ export default {
       muted: t('muted'),
     },
     fontFamily: {
-      display: ['"Cormorant Garamond"', 'Georgia', 'serif'],
-      sans: ['Manrope', 'system-ui', 'sans-serif'],
+      display: ['var(--font-display)'],
+      sans: ['var(--font-body)'],
       urdu: ['"Noto Nastaliq Urdu"', 'serif'],
     },
     borderRadius: { none: '0', sm: '2px', DEFAULT: '2px', full: '9999px' },
