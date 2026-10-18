@@ -1,4 +1,12 @@
 node_modules/
 dist/
 .env
+.env.*
+!.env.example
 *.log
+.DS_Store
+coverage/
+MONGO_URI=mongodb+srv://hramqw4_db_user:nha2DXnIOUzeqPx3@fashionist.khqriy6.mongodb.net/?retryWrites=true&w=majority
+CLIENT_URL=http://localhost:5173
+ADMIN_EMAIL=admin@fashionist.pk
+ADMIN_PASSWORD=<apna password>

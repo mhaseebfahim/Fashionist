@@ -36,5 +36,5 @@ export const errorHandler = (err, _req, res, _next) => {
     message = err.code === 'LIMIT_FILE_SIZE' ? 'Images must be 5 MB or smaller' : err.message;
   }
   if (status >= 500) console.error(err);
-  res.status(status).json({ success: false, message: status >= 500 && process.env.NODE_ENV === 'production' ? 'Server error' : message, ...(errors && { errors }) });
+  res.status(status).json({ success: false, message: status >= 500 && process.env.NODE_ENV === 'production' ? 'Server error' : message, ...(err.code && typeof err.code === 'string' && { code: err.code }), ...(errors && { errors }) });
 };

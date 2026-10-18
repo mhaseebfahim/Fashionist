@@ -4,7 +4,16 @@ import * as seed from './seedData.js';
 import { cmsDefaults } from '../../cms/defaults.js';
 import { ATTR_FILTERS, ORDER_STATUSES, canTransition, couponDiscount, couponError, isWithinReturnWindow, MAX_QTY, shippingFeeFor } from '../../utils/rules.js';
 
-const KEY = 'fashionist:mockdb:v2';
+const KEY = 'fashionist:mockdb:v4';
+const ENV = (typeof import.meta !== 'undefined' && import.meta.env) || {};
+// Mirrors the server flags. Set VITE_MOCK_EMAIL_VERIFICATION=true to try the OTP flow in the mock (code shown in a toast).
+const MOCK_OTP = ENV.VITE_MOCK_EMAIL_VERIFICATION === 'true';
+const DOMAINS = ['gmail.com', 'outlook.com'];
+const allowedEmail = (e) => {
+  const m = String(e || '').trim().toLowerCase().match(/^([a-z0-9](?:[a-z0-9._+-]{0,62}[a-z0-9])?)@([a-z0-9.-]+)$/);
+  return !!m && !m[1].includes('..') && DOMAINS.includes(m[2]);
+};
+const newOtp = (u) => ((u.otp = String(Math.floor(100000 + Math.random() * 900000))), (u.otpExpires = Date.now() + 600000), (u.otpAttempts = 0), u.otp);
 const id = () => Array.from({ length: 24 }, () => '0123456789abcdef'[Math.floor(Math.random() * 16)]).join('');
 const now = () => new Date().toISOString();
 const iso = (d) => (d instanceof Date ? d.toISOString() : d);
@@ -16,8 +25,8 @@ function fresh() {
   for (const c of seed.categories) categories.push({ _id: id(), isActive: true, ...c, parent: c.parent ? categories.find((x) => x.slug === c.parent)._id : null, createdAt: now() });
   const catId = Object.fromEntries(categories.map((c) => [c.slug, c._id]));
   const products = seed.products.map((p, i) => ({ _id: id(), ...clone(p), category: catId[p.category], createdAt: new Date(Date.now() - i * 3600000).toISOString() }));
-  const admin = { _id: id(), name: 'Store Owner', email: 'admin@fashionist.pk', phone: '03001234567', role: 'admin', password: 'Admin@123', addresses: [], language: 'en', createdAt: new Date(Date.now() - 90 * DAY).toISOString() };
-  const customers = seed.customers.map((c, i) => ({ _id: id(), ...clone(c), addresses: c.addresses.map((a) => ({ _id: id(), ...a })), role: 'customer', password: seed.CUSTOMER_PASSWORD, language: 'en', createdAt: new Date(Date.now() - (40 - i * 12) * DAY).toISOString() }));
+  const admin = { _id: id(), isEmailVerified: true, name: 'Store Owner', email: 'admin@fashionist.pk', phone: '03001234567', role: 'admin', password: 'Admin@123', addresses: [], language: 'en', createdAt: new Date(Date.now() - 90 * DAY).toISOString() };
+  const customers = seed.customers.map((c, i) => ({ _id: id(), isEmailVerified: true, ...clone(c), addresses: c.addresses.map((a) => ({ _id: id(), ...a })), role: 'customer', password: seed.CUSTOMER_PASSWORD, language: 'en', createdAt: new Date(Date.now() - (40 - i * 12) * DAY).toISOString() }));
   const orders = seed.makeOrders(products, customers).map((o) => clone({ _id: id(), ...o }));
   const reviews = seed.makeReviews(orders).map((r) => ({ _id: id(), ...r, createdAt: now() }));
   reviews.forEach((r) => {
@@ -67,20 +76,21 @@ const save = () => {
 };
 
 class HttpError extends Error {
-  constructor(status, message, errors) {
+  constructor(status, message, errors, code) {
     super(message);
     this.status = status;
     this.errors = errors;
+    this.code = code;
   }
 }
-const fail = (status, message, errors) => {
-  throw new HttpError(status, message, errors);
+const fail = (status, message, errors, code) => {
+  throw new HttpError(status, message, errors, code);
 };
 const need = (cond, msg, status = 422) => cond || fail(status, msg);
 
 const pub = (u) => {
   if (!u) return u;
-  const { password, ...rest } = u;
+  const { password, otp, otpExpires, otpAttempts, resetToken, ...rest } = u;
   return rest;
 };
 const catRef = (cid) => {
@@ -305,15 +315,21 @@ const routes = [
     need(/^\S+@\S+\.\S+$/.test(body.email || ''), 'Enter a valid email');
     need(/^03\d{9}$/.test(body.phone || ''), 'Mobile must be 03XXXXXXXXX');
     need(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/.test(body.password || ''), 'Password needs 8+ characters with upper case, lower case and a number');
-    if (db.users.some((u) => u.email === body.email.toLowerCase())) fail(409, 'Email already registered');
-    const u = { _id: id(), name: body.name, email: body.email.toLowerCase(), phone: body.phone, password: body.password, role: 'customer', addresses: [], language: 'en', createdAt: now() };
-    db.users.push(u);
+    if (!allowedEmail(body.email)) fail(422, 'Please use an email ending in @gmail.com or @outlook.com');
+    const email = body.email.trim().toLowerCase();
+    const existing = db.users.find((u) => u.email === email);
+    if (existing && (existing.isEmailVerified !== false || !MOCK_OTP)) fail(409, 'Email already registered');
+    const u = existing || { _id: id(), email, role: 'customer', addresses: [], language: 'en', createdAt: now() };
+    Object.assign(u, { name: body.name.trim(), phone: body.phone, password: body.password, isEmailVerified: !MOCK_OTP });
+    if (!existing) db.users.push(u);
+    if (MOCK_OTP) return [201, { verificationRequired: true, email, message: `Demo mode — your code is ${newOtp(u)}` }];
     return [201, { token: `mock.${u._id}`, user: pub(u) }];
   }],
   ['post', /^\/auth\/login$/, ({ body }) => {
     const u = db.users.find((x) => x.email === String(body.email).toLowerCase() && x.password === body.password);
     if (!u) fail(401, 'Invalid email or password');
     if (u.isBlocked) fail(403, 'Your account has been blocked');
+    if (MOCK_OTP && u.isEmailVerified === false && u.role !== 'admin') fail(403, `Please verify your email (demo code: ${newOtp(u)})`, undefined, 'EMAIL_NOT_VERIFIED');
     return { token: `mock.${u._id}`, user: pub(u) };
   }],
   ['post', /^\/auth\/forgot-password$/, ({ body }) => {
@@ -328,6 +344,22 @@ const routes = [
     delete u.resetToken;
     return { token: `mock.${u._id}`, user: pub(u) };
   }],
+  ['get', /^\/auth\/config$/, () => ({ emailVerification: MOCK_OTP, googleEnabled: false, googleClientId: null, allowedEmailDomains: DOMAINS })],
+  ['post', /^\/auth\/verify-email$/, ({ body }) => {
+    const u = db.users.find((x) => x.email === String(body.email).toLowerCase());
+    if (!u || u.isEmailVerified !== false) fail(400, 'Nothing to verify for this email');
+    if (!u.otp || u.otpExpires < Date.now()) fail(400, 'Code expired — request a new one', undefined, 'OTP_EXPIRED');
+    if (u.otpAttempts >= 5) fail(429, 'Too many wrong codes — request a new one', undefined, 'OTP_LOCKED');
+    if (String(body.otp) !== u.otp) fail(400, `Incorrect code (${5 - ++u.otpAttempts} attempts left)`, undefined, 'OTP_INVALID');
+    Object.assign(u, { isEmailVerified: true, otp: undefined });
+    return { token: `mock.${u._id}`, user: pub(u) };
+  }],
+  ['post', /^\/auth\/resend-otp$/, ({ body }) => {
+    const u = db.users.find((x) => x.email === String(body.email).toLowerCase());
+    const message = 'If the account needs verification, a new code has been sent';
+    return u && u.isEmailVerified === false ? { message, devOtp: newOtp(u) } : { message };
+  }],
+  ['post', /^\/auth\/google$/, () => fail(400, 'Google sign-in is not enabled')],
   ['get', /^\/auth\/me$/, ({ cfg }) => ({ user: pub(currentUser(cfg)) })],
   ['patch', /^\/auth\/me$/, ({ cfg, body }) => {
     const u = currentUser(cfg);
@@ -632,7 +664,7 @@ const routes = [
   }],
 
   /* ---- admin: orders & returns ---- */
-  ['get', /^\/admin\/orders\/export$/, ({ cfg, params }) => (requireAdmin(cfg), csv(['orderNumber', 'createdAt', 'status', 'paymentStatus', 'shippingAddress.name', 'shippingAddress.phone', 'shippingAddress.city', 'subtotal', 'discount', 'shippingFee', 'total'], filterOrders(params))))],
+  ['get', /^\/admin\/orders\/export$/, ({ cfg, params }) => (requireAdmin(cfg), csv(['orderNumber', 'createdAt', 'status', 'paymentStatus', 'shippingAddress.name', 'shippingAddress.phone', 'shippingAddress.city', 'subtotal', 'discount', 'shippingFee', 'total'], filterOrders(params)))],
   ['get', /^\/admin\/orders$/, ({ cfg, params }) => {
     requireAdmin(cfg);
     const all = filterOrders({ ...params, status: '' });
@@ -954,7 +986,7 @@ export async function mockAdapter(cfg) {
       const err = new Error(e.message);
       err.config = cfg;
       err.isAxiosError = true;
-      err.response = respond(e.status || 500, { success: false, message: e.message, ...(e.errors && { errors: e.errors }) });
+      err.response = respond(e.status || 500, { success: false, message: e.message, ...(e.code && { code: e.code }), ...(e.errors && { errors: e.errors }) });
       throw err;
     }
   }

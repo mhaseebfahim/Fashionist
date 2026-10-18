@@ -121,7 +121,9 @@ export default function Categories() {
 function StockCell({ row, onSaved }) {
   const [v, setV] = useState(row.stock);
   const [busy, setBusy] = useState(false);
-  useEffect(() => setV(row.stock), [row.stock]);
+  useEffect(() => {
+    setV(row.stock);
+  }, [row.stock]);
   const save = async () => {
     const n = parseInt(v);
     if (n === row.stock) return;

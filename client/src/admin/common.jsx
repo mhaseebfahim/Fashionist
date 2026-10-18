@@ -290,7 +290,9 @@ export function ProductPicker({ open, onClose, onPick, multiple, selected = [] }
   const dq = useDebounce(q);
   const { data, loading } = useAsync(() => (open ? adminService.products({ q: dq || undefined, status: 'active' }) : Promise.resolve(null)), [dq, open]);
   const [picked, setPicked] = useState(selected);
-  useEffect(() => open && setPicked(selected), [open]); // eslint-disable-line
+  useEffect(() => {
+    if (open) setPicked(selected);
+  }, [open]); // eslint-disable-line
   return (
     <Modal open={open} onClose={onClose} title={multiple ? 'Choose products' : 'Choose a product'} wide>
       <input autoFocus value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by title or SKU…" className="input mb-4 bg-white" />

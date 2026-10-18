@@ -1,4 +1,6 @@
+import { Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
+import { Spinner } from '../components/ui.jsx';
 import { AnimatePresence, motion } from 'framer-motion';
 import Header, { AnnouncementBar } from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
@@ -14,7 +16,9 @@ export default function StoreLayout() {
       <Header />
       <AnimatePresence mode="wait">
         <motion.main id="main" key={pathname} className="flex-1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.35 }}>
-          <Outlet />
+          <Suspense fallback={<div className="grid min-h-[60vh] place-items-center"><Spinner className="h-6 w-6" /></div>}>
+            <Outlet />
+          </Suspense>
         </motion.main>
       </AnimatePresence>
       <Footer />

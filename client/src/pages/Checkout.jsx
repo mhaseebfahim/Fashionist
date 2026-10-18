@@ -77,7 +77,9 @@ export function CartPage() {
   const items = useSelector((s) => s.cart.items);
   const [coupon, setCoupon] = useState(readCoupon);
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
-  useEffect(() => sessionStorage.setItem(COUPON_KEY, JSON.stringify(coupon)), [coupon]);
+  useEffect(() => {
+    sessionStorage.setItem(COUPON_KEY, JSON.stringify(coupon));
+  }, [coupon]);
   if (!items.length) return <EmptyState title={t('cart.empty')} text={t('cart.emptySub')} action={<Link to="/shop" className="btn-ink">{t('cart.continue')}</Link>} />;
   return (
     <div className="container-site py-14">

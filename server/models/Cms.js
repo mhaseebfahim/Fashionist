@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 const { Mixed } = mongoose.Schema.Types;
 const opts = { timestamps: true };
 
-export const SECTION_TYPES = ['hero', 'categoryMosaic', 'productRail', 'shopTheLook', 'spotlight', 'bestSellers', 'promiseStrip', 'testimonials', 'lookbookGrid', 'newsletter', 'richText', 'banner'];
+export const SECTION_TYPES = ['hero', 'categoryMosaic', 'productRail', 'shopTheLook', 'spotlight', 'mostLoved', 'promiseStrip', 'testimonials', 'lookbookGrid', 'newsletter', 'richText', 'banner'];
 
 /** Single-document collections get a `current()` helper that creates the doc on first use. */
 const singleton = (schema) => {

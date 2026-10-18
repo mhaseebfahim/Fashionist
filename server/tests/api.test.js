@@ -1,11 +1,14 @@
+import { createHash } from 'node:crypto';
 import { start, stop, api, makeUser, makeProduct, address, models } from './setup.js';
+
+const sha = (s) => createHash('sha256').update(s).digest('hex');
 
 beforeAll(start);
 afterAll(stop);
 
 describe('auth', () => {
   test('register creates a customer; duplicate email → 409', async () => {
-    const body = { name: 'Sana Tariq', email: 'sana@test.pk', phone: '03335556677', password: 'Secret123', role: 'admin' };
+    const body = { name: 'Sana Tariq', email: 'sana.test@gmail.com', phone: '03335556677', password: 'Secret123', role: 'admin' };
     const r1 = await api().post('/api/auth/register').send(body);
     expect(r1.status).toBe(201);
     expect(r1.body.success).toBe(true);
@@ -22,8 +25,20 @@ describe('auth', () => {
     expect(r.body.errors.length).toBeGreaterThan(0);
   });
 
+  test('only @gmail.com / @outlook.com can register', async () => {
+    const base = { name: 'Bilal Ahmed', phone: '03001112233', password: 'Secret123' };
+    for (const email of ['bilal@yahoo.com', 'bilal@gmail.co', 'bilal@gmail.com.pk', '.bilal@gmail.com', 'bi..lal@outlook.com']) {
+      const r = await api().post('/api/auth/register').send({ ...base, email });
+      expect([r.status, email]).toEqual([422, email]);
+    }
+    const ok = await api().post('/api/auth/register').send({ ...base, email: 'Bilal.Ahmed@Outlook.com' });
+    expect(ok.status).toBe(201);
+    expect(ok.body.data.user.email).toBe('bilal.ahmed@outlook.com'); // dots kept, lower-cased
+    expect(ok.body.data.user.isEmailVerified).toBe(true); // verification switched off
+  });
+
   test('wrong password → 401', async () => {
-    const r = await api().post('/api/auth/login').send({ email: 'sana@test.pk', password: 'Wrong1234' });
+    const r = await api().post('/api/auth/login').send({ email: 'sana.test@gmail.com', password: 'Wrong1234' });
     expect(r.status).toBe(401);
   });
 });
@@ -203,5 +218,37 @@ describe('admin catalogue & CMS', () => {
   test('unknown route → 404 envelope; health ok', async () => {
     expect((await api().get('/api/nope')).body).toMatchObject({ success: false });
     expect((await api().get('/api/health')).body.data.ok).toBe(true);
+  });
+});
+
+describe('email OTP verification (EMAIL_VERIFICATION_ENABLED=true)', () => {
+  beforeAll(() => (process.env.EMAIL_VERIFICATION_ENABLED = 'true'));
+  afterAll(() => delete process.env.EMAIL_VERIFICATION_ENABLED);
+
+  test('register → no token until the 6-digit code is verified', async () => {
+    const body = { name: 'Hira Khan', email: 'hira.otp@gmail.com', phone: '03001234567', password: 'Secret123' };
+    const r = await api().post('/api/auth/register').send(body);
+    expect(r.status).toBe(201);
+    expect(r.body.data).toMatchObject({ verificationRequired: true, email: body.email });
+    expect(r.body.data.token).toBeUndefined();
+
+    const login = await api().post('/api/auth/login').send({ email: body.email, password: body.password });
+    expect(login.status).toBe(403);
+    expect(login.body.code).toBe('EMAIL_NOT_VERIFIED');
+
+    // The real code is emailed; plant a known one for the test.
+    const user = await models.User.findOne({ email: body.email });
+    await models.User.updateOne({ _id: user._id }, { otpHash: sha(`${user._id}:123456`), otpExpires: new Date(Date.now() + 60000), otpAttempts: 0 });
+    const wrong = await api().post('/api/auth/verify-email').send({ email: body.email, otp: '000000' });
+    expect(wrong.status).toBe(400);
+    const ok = await api().post('/api/auth/verify-email').send({ email: body.email, otp: '123456' });
+    expect(ok.status).toBe(200);
+    expect(ok.body.data.token).toBeTruthy();
+    expect((await api().post('/api/auth/login').send({ email: body.email, password: body.password })).status).toBe(200);
+  });
+
+  test('auth config reports the flags', async () => {
+    const r = await api().get('/api/auth/config');
+    expect(r.body.data).toMatchObject({ emailVerification: true, googleEnabled: false, allowedEmailDomains: ['gmail.com', 'outlook.com'] });
   });
 });

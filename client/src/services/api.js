@@ -1,5 +1,4 @@
 import axios from 'axios';
-import { mockAdapter } from './mock/adapter.js';
 
 export const TOKEN_KEY = 'fashionist:token';
 export const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
@@ -7,7 +6,8 @@ export const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || '/api',
   timeout: 20000,
-  ...(USE_MOCK && { adapter: mockAdapter }),
+  // Mock API is a separate lazy chunk — production builds with VITE_USE_MOCK=false never download it.
+  ...(USE_MOCK && { adapter: (cfg) => import('./mock/adapter.js').then((m) => m.mockAdapter(cfg)) }),
 });
 
 api.interceptors.request.use((cfg) => {
@@ -30,7 +30,7 @@ api.interceptors.response.use(
       window.dispatchEvent(new Event('fashionist:logout'));
     }
     const message = status === 429 ? body.message || 'Too many requests — please wait a moment' : body.message || (err.code === 'ECONNABORTED' ? 'The server took too long to respond' : err.message) || 'Network error';
-    return Promise.reject(Object.assign(new Error(message), { status, errors: body.errors }));
+    return Promise.reject(Object.assign(new Error(message), { status, code: body.code, errors: body.errors }));
   }
 );
 

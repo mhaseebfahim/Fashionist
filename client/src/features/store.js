@@ -32,6 +32,7 @@ const authSlice = createSlice({
   },
   extraReducers: (b) => {
     const onAuth = (s, a) => {
+      if (!a.payload.token) return; // e.g. registration waiting for email OTP
       localStorage.setItem(TOKEN_KEY, a.payload.token);
       s.user = a.payload.user;
       s.ready = true;

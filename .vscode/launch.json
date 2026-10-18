@@ -1,11 +1,9 @@
 {
   "version": "0.2.0",
   "configurations": [
-    {
-      "name": "npm install && npm run dev",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "npm install && npm run dev"
-    }
-  ]
+    { "name": "API (in-memory MongoDB)", "type": "node-terminal", "request": "launch", "command": "npm --prefix server run dev:memory" },
+    { "name": "API (MONGO_URI from server/.env)", "type": "node-terminal", "request": "launch", "command": "npm --prefix server run dev" },
+    { "name": "Storefront (Vite)", "type": "node-terminal", "request": "launch", "command": "npm --prefix client run dev" }
+  ],
+  "compounds": [{ "name": "Full stack (in-memory DB)", "configurations": ["API (in-memory MongoDB)", "Storefront (Vite)"] }]
 }

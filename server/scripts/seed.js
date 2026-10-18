@@ -32,6 +32,7 @@ export async function seed({ reset = false, log = console.log } = {}) {
   let admin = await User.findOne({ email: ADMIN_EMAIL });
   if (!admin) admin = new User({ name: 'Store Owner', email: ADMIN_EMAIL, phone: '03001234567' });
   admin.role = 'admin';
+  admin.isEmailVerified = true;
   await admin.setPassword(ADMIN_PASSWORD);
   await admin.save();
 
@@ -39,7 +40,7 @@ export async function seed({ reset = false, log = console.log } = {}) {
   for (const c of data.customers) {
     let u = await User.findOne({ email: c.email });
     if (!u) {
-      u = new User({ ...c, role: 'customer' });
+      u = new User({ ...c, role: 'customer', isEmailVerified: true });
       await u.setPassword(data.CUSTOMER_PASSWORD);
       await u.save();
     }

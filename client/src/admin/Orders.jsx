@@ -158,7 +158,9 @@ export default function Orders() {
     v ? n.set(k, v) : n.delete(k);
     setSp(n, { replace: true });
   };
-  useEffect(() => setSel([]), [status]);
+  useEffect(() => {
+    setSel([]);
+  }, [status]);
 
   const runBulk = async () => {
     if (!confirm(`Set ${sel.length} order(s) to ${bulk}?`)) return;

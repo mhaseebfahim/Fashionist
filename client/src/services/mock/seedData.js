@@ -116,9 +116,9 @@ export const products = P.map(([title, titleUr, category, price, compareAtPrice,
 }));
 
 export const customers = [
-  { name: 'Ayesha Khan', email: 'ayesha@example.com', phone: '03214567890', addresses: [{ label: 'Home', name: 'Ayesha Khan', phone: '03214567890', city: 'Lahore', area: 'DHA Phase 5', street: 'House 12, Street 4', isDefault: true }] },
-  { name: 'Hamza Ali', email: 'hamza@example.com', phone: '03001112233', addresses: [{ label: 'Home', name: 'Hamza Ali', phone: '03001112233', city: 'Karachi', area: 'Clifton Block 5', street: 'Flat 7, Sea View Apartments', isDefault: true }] },
-  { name: 'Sana Tariq', email: 'sana@example.com', phone: '03335556677', addresses: [{ label: 'Home', name: 'Sana Tariq', phone: '03335556677', city: 'Multan', area: 'Gulgasht Colony', street: 'House 45-B', isDefault: true }] },
+  { name: 'Ayesha Khan', email: 'ayesha.fashionist@gmail.com', phone: '03214567890', addresses: [{ label: 'Home', name: 'Ayesha Khan', phone: '03214567890', city: 'Lahore', area: 'DHA Phase 5', street: 'House 12, Street 4', isDefault: true }] },
+  { name: 'Hamza Ali', email: 'hamza.fashionist@gmail.com', phone: '03001112233', addresses: [{ label: 'Home', name: 'Hamza Ali', phone: '03001112233', city: 'Karachi', area: 'Clifton Block 5', street: 'Flat 7, Sea View Apartments', isDefault: true }] },
+  { name: 'Sana Tariq', email: 'sana.fashionist@outlook.com', phone: '03335556677', addresses: [{ label: 'Home', name: 'Sana Tariq', phone: '03335556677', city: 'Multan', area: 'Gulgasht Colony', street: 'House 45-B', isDefault: true }] },
 ];
 export const CUSTOMER_PASSWORD = 'Customer@123';
 

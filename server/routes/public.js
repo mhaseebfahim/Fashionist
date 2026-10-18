@@ -21,14 +21,19 @@ const address = (p = '') => [
   body(`${p}area`).optional().trim().isLength({ max: 120 }),
   body(`${p}street`).trim().isLength({ min: 3, max: 200 }).withMessage('Street address is required'),
 ];
+const email = () => body('email').isString().trim().toLowerCase().isEmail().withMessage('Enter a valid email');
 const mongoId = (n = 'id') => param(n).isMongoId().withMessage('Invalid id');
 
 /* ---- /api/auth ---- */
 export const authRoutes = Router()
-  .post('/register', limiter(20), validate([body('name').trim().isLength({ min: 2, max: 80 }), body('email').isEmail().normalizeEmail(), body('phone').matches(PHONE).withMessage('Mobile must be 03XXXXXXXXX'), strongPw()]), auth.register)
-  .post('/login', loginLimiter, validate([body('email').isEmail().normalizeEmail(), body('password').isString().notEmpty()]), auth.login)
-  .post('/forgot-password', loginLimiter, validate([body('email').isEmail().normalizeEmail()]), auth.forgotPassword)
+  .post('/register', limiter(20), validate([body('name').trim().isLength({ min: 2, max: 80 }), email(), body('phone').matches(PHONE).withMessage('Mobile must be 03XXXXXXXXX'), strongPw()]), auth.register)
+  .post('/login', loginLimiter, validate([email(), body('password').isString().notEmpty()]), auth.login)
+  .post('/forgot-password', loginLimiter, validate([email()]), auth.forgotPassword)
   .post('/reset-password/:token', loginLimiter, validate([param('token').isHexadecimal().isLength({ min: 64, max: 64 }), strongPw()]), auth.resetPassword)
+  .get('/config', auth.config)
+  .post('/verify-email', loginLimiter, validate([email(), body('otp').isString().matches(/^\d{6}$/).withMessage('Enter the 6-digit code')]), auth.verifyEmail)
+  .post('/resend-otp', loginLimiter, validate([email()]), auth.resendOtp)
+  .post('/google', loginLimiter, validate([body('credential').isString().isLength({ min: 20, max: 5000 })]), auth.google)
   .get('/me', protect, auth.me)
   .patch('/me', protect, validate([body('name').optional().trim().isLength({ min: 2, max: 80 }), body('phone').optional().matches(PHONE), body('language').optional().isIn(['en', 'ur'])]), auth.updateMe)
   .get('/addresses', protect, auth.listAddresses)

@@ -225,7 +225,9 @@ export default function AdminApp() {
     window.addEventListener('keydown', k);
     return () => window.removeEventListener('keydown', k);
   }, []);
-  useEffect(() => setDrawer(false), [pathname]);
+  useEffect(() => {
+    setDrawer(false);
+  }, [pathname]);
 
   if (pathname.startsWith('/admin/print/'))
     return (

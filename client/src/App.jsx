@@ -7,13 +7,20 @@ import { fetchMe, loadCms, loadWishlist } from './features/store.js';
 import { TOKEN_KEY } from './services/api.js';
 import { applyTheme } from './utils/theme.js';
 import Home from './pages/Home.jsx';
-import Shop from './pages/Shop.jsx';
-import Product from './pages/Product.jsx';
-import { CartPage, Checkout, OrderSuccess } from './pages/Checkout.jsx';
-import { Login, Register, ForgotPassword, ResetPassword } from './pages/Auth.jsx';
-import StaticPage from './pages/StaticPage.jsx';
 
-// Code-split: customers never download the admin bundle.
+// Code-split every route except the homepage so first paint ships the minimum JS.
+const named = (loader, name) => lazy(() => loader().then((m) => ({ default: m[name] })));
+const Shop = lazy(() => import('./pages/Shop.jsx'));
+const Product = lazy(() => import('./pages/Product.jsx'));
+const CartPage = named(() => import('./pages/Checkout.jsx'), 'CartPage');
+const Checkout = named(() => import('./pages/Checkout.jsx'), 'Checkout');
+const OrderSuccess = named(() => import('./pages/Checkout.jsx'), 'OrderSuccess');
+const Login = named(() => import('./pages/Auth.jsx'), 'Login');
+const Register = named(() => import('./pages/Auth.jsx'), 'Register');
+const VerifyEmail = named(() => import('./pages/Auth.jsx'), 'VerifyEmail');
+const ForgotPassword = named(() => import('./pages/Auth.jsx'), 'ForgotPassword');
+const ResetPassword = named(() => import('./pages/Auth.jsx'), 'ResetPassword');
+const StaticPage = lazy(() => import('./pages/StaticPage.jsx'));
 const Account = lazy(() => import('./pages/Account.jsx'));
 const Admin = lazy(() => import('./admin/AdminApp.jsx'));
 
@@ -41,9 +48,15 @@ export default function App() {
   useEffect(() => {
     if (user?.role === 'customer') dispatch(loadWishlist());
   }, [user, dispatch]);
-  useEffect(() => window.scrollTo(0, 0), [pathname]);
-  useEffect(() => applyTheme(theme), [theme]);
-  useEffect(() => document.documentElement.classList.toggle('dark', dark && theme.darkModeEnabled !== false && !pathname.startsWith('/admin')), [dark, theme, pathname]);
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  useEffect(() => {
+    applyTheme(theme);
+  }, [theme]);
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark && theme.darkModeEnabled !== false && !pathname.startsWith('/admin'));
+  }, [dark, theme, pathname]);
 
   return (
     <Suspense fallback={<Loading />}>
@@ -61,6 +74,7 @@ export default function App() {
           <Route path="account/*" element={<RequireAuth><Account /></RequireAuth>} />
           <Route path="login" element={<Login />} />
           <Route path="register" element={<Register />} />
+          <Route path="verify-email" element={<VerifyEmail />} />
           <Route path="forgot-password" element={<ForgotPassword />} />
           <Route path="reset-password/:token" element={<ResetPassword />} />
           <Route path="pages/:slug" element={<StaticPage />} />

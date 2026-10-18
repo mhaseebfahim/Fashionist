@@ -181,7 +181,7 @@ export function Spotlight({ section }) {
   );
 }
 
-export function BestSellers({ section }) {
+export function MostLoved({ section }) {
   const { t } = useTranslation();
   const L = useL();
   const tabs = section.content?.tabs?.length ? section.content.tabs : ['women'];
@@ -332,7 +332,7 @@ export function Banner({ section }) {
   );
 }
 
-export const SECTION_COMPONENTS = { hero: Hero, categoryMosaic: CategoryMosaic, productRail: ProductRail, shopTheLook: ShopTheLook, spotlight: Spotlight, bestSellers: BestSellers, promiseStrip: PromiseStrip, testimonials: Testimonials, lookbookGrid: LookbookGrid, newsletter: Newsletter, richText: RichText, banner: Banner };
+export const SECTION_COMPONENTS = { hero: Hero, categoryMosaic: CategoryMosaic, productRail: ProductRail, shopTheLook: ShopTheLook, spotlight: Spotlight, mostLoved: MostLoved, promiseStrip: PromiseStrip, testimonials: Testimonials, lookbookGrid: LookbookGrid, newsletter: Newsletter, richText: RichText, banner: Banner };
 
 /** Renders the published (or preview) homepage sections from the CMS store. */
 export function HomepageSections() {

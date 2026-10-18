@@ -8,7 +8,7 @@ export const FONT_PAIRS = {
   soft: { label: 'Cormorant Garamond + Jost', heading: 'Cormorant Garamond', body: 'Jost' },
 };
 
-export const SECTION_TYPES = ['hero', 'categoryMosaic', 'productRail', 'shopTheLook', 'spotlight', 'bestSellers', 'promiseStrip', 'testimonials', 'lookbookGrid', 'newsletter', 'richText', 'banner'];
+export const SECTION_TYPES = ['hero', 'categoryMosaic', 'productRail', 'shopTheLook', 'spotlight', 'mostLoved', 'promiseStrip', 'testimonials', 'lookbookGrid', 'newsletter', 'richText', 'banner'];
 
 export const theme = {
   primaryColor: '#E11D48',
@@ -71,7 +71,7 @@ export const sections = [
     ],
   }, { subtitle: 'Styled by Fashionist' }),
   s(4, 'spotlight', 'Sold by the metre', 'میٹر کے حساب سے', { image: IMG.f2, eyebrow: 'Unstitched', eyebrowUr: 'ان سلا', text: 'Pure jacquards, raw silks and lawns — choose your length, design your own story with your tailor.', textUr: 'خالص جیکارڈ، را سلک اور لان — اپنی لمبائی چنیں، اپنی کہانی خود بنائیں۔', ctaText: 'Shop Fabrics', ctaTextUr: 'کپڑا خریدیں', ctaLink: '/shop/unstitched', dark: true }),
-  s(5, 'bestSellers', 'Best Sellers', 'سب سے زیادہ فروخت', { tabs: ['women', 'men', 'kids'], limit: 4 }),
+  s(5, 'mostLoved', 'Most Loved', 'سب سے زیادہ فروخت', { tabs: ['women', 'men', 'kids'], limit: 4 }),
   s(6, 'promiseStrip', 'Our Promise', 'ہمارا وعدہ', {
     items: [
       { icon: 'cod', title: 'Cash on Delivery', titleUr: 'کیش آن ڈیلیوری', text: 'Pay when it arrives', textUr: 'پہنچنے پر ادائیگی' },

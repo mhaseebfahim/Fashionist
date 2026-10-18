@@ -1,0 +1,16 @@
+{
+  "name": "fashionist",
+  "private": true,
+  "description": "Fashionist — single-store fashion e-commerce for Pakistan (MERN monorepo: client + server)",
+  "scripts": {
+    "install:all": "npm --prefix server install && npm --prefix client install",
+    "dev:server": "npm --prefix server run dev",
+    "dev:server:memory": "npm --prefix server run dev:memory",
+    "dev:client": "npm --prefix client run dev",
+    "build": "npm --prefix client run build",
+    "seed": "npm --prefix server run seed",
+    "test": "npm --prefix server test && npm --prefix server run smoke",
+    "check": "npm --prefix client run build && npm --prefix client run check"
+  },
+  "engines": { "node": ">=20" }
+}
