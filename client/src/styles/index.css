@@ -1,0 +1,42 @@
+@import './tokens.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-bg text-fg font-sans antialiased; -webkit-tap-highlight-color: transparent; }
+  html[lang='ur'] body, .font-ur { font-family: 'Noto Nastaliq Urdu', serif; line-height: 2; }
+  html[lang='ur'] .font-display { font-family: 'Noto Nastaliq Urdu', serif; line-height: 1.8; }
+  h1, h2, h3 { @apply font-display font-semibold; }
+  :focus-visible { outline: 2px solid rgb(var(--rose)); outline-offset: 2px; }
+  ::selection { background: rgb(var(--blush)); color: rgb(var(--ink)); }
+  input, select, textarea { @apply rounded-none; }
+}
+
+@layer components {
+  .container-site { @apply mx-auto w-full max-w-site px-4 sm:px-6 lg:px-10; }
+  .label { @apply text-[11px] font-semibold uppercase tracking-label; }
+  .btn { @apply inline-flex items-center justify-center gap-2 px-7 py-3.5 text-xs font-semibold uppercase tracking-label transition-colors duration-300 disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply btn bg-rose text-white hover:bg-rose-deep; }
+  .btn-ink { @apply btn bg-fg text-bg hover:bg-rose; }
+  .btn-outline { @apply btn border border-fg text-fg hover:bg-fg hover:text-bg; }
+  .btn-ghost { @apply btn px-0 text-fg; }
+  .input { @apply w-full border border-line bg-bg px-4 py-3 text-sm text-fg placeholder:text-muted focus:border-fg focus:outline-none; }
+  .input-error { @apply border-rose; }
+  .chip { @apply rounded-full border border-line px-4 py-1.5 text-xs font-medium transition-colors hover:border-fg; }
+  .chip-active { @apply border-fg bg-fg text-bg; }
+  .link-grow { @apply relative inline-block after:absolute after:-bottom-0.5 after:left-0 after:h-px after:w-0 after:bg-current after:transition-all after:duration-500 hover:after:w-full rtl:after:left-auto rtl:after:right-0; }
+  .card-img { @apply relative overflow-hidden bg-surface; }
+  .card-img img { @apply transition-transform duration-700 ease-out; }
+  .group:hover .card-img img { transform: scale(1.04); }
+  .skeleton { @apply animate-pulse bg-surface; }
+  .hairline { @apply border-line; }
+}
+
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { scrollbar-width: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+}

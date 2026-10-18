@@ -1,0 +1,10 @@
+{
+  "name": "Fashionist",
+  "short_name": "Fashionist",
+  "description": "Wear Your Story",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#FAF7F2",
+  "theme_color": "#141414",
+  "icons": [{ "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }]
+}

@@ -1,0 +1,28 @@
+/* FASHIONIST brand tokens — the ONLY colours allowed in the UI (RGB triplets for Tailwind alpha). */
+:root {
+  --ink: 20 20 20;          /* #141414 */
+  --ivory: 250 247 242;     /* #FAF7F2 */
+  --sand: 239 232 221;      /* #EFE8DD */
+  --stone: 138 129 120;     /* #8A8178 */
+  --hairline: 228 220 208;  /* #E4DCD0 */
+  --rose: 225 29 72;        /* #E11D48 */
+  --rose-deep: 159 18 57;   /* #9F1239 */
+  --blush: 255 228 230;     /* #FFE4E6 */
+  --gold: 176 141 87;       /* #B08D57 */
+
+  --bg: var(--ivory);
+  --fg: var(--ink);
+  --surface: var(--sand);
+  --line: var(--hairline);
+  --muted: var(--stone);
+
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dark {
+  --bg: 20 20 20;
+  --fg: 250 247 242;
+  --surface: 33 31 29;
+  --line: 58 54 50;
+  --muted: 168 160 151;
+}

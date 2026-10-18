@@ -1,0 +1,29 @@
+{
+  "announcement": { "enabled": true },
+  "hero": {
+    "slides": [
+      { "eyebrow": "Eid 2026", "title": "The Eid Edit", "titleUr": "عید ایڈٹ", "text": "Hand-embroidered lawn, organza and silk — pieces made for the moments you will retell for years.", "textUr": "ہاتھ کی کڑھائی والی لان، آرگنزا اور سلک — ان لمحوں کے لیے جنہیں آپ برسوں یاد رکھیں گے۔", "image": "w1" },
+      { "eyebrow": "Menswear", "title": "Quiet Tailoring", "titleUr": "خاموش ٹیلرنگ", "text": "Linen kurtas and jamawar waistcoats, cut with restraint and finished by hand.", "textUr": "لینن کرتے اور جامہ وار واسکٹ، سادگی سے تراشے گئے۔", "image": "m1" },
+      { "eyebrow": "Unstitched", "title": "Silk, by the Metre", "titleUr": "میٹر کے حساب سے سلک", "text": "Raw silks and jacquards in heirloom colours. Your tailor, your silhouette.", "textUr": "روایتی رنگوں میں را سلک اور جیکارڈ۔", "image": "w2" }
+    ]
+  },
+  "mosaic": [
+    { "slug": "women", "image": "w4", "tall": true },
+    { "slug": "men", "image": "m2" },
+    { "slug": "kids", "image": "k1" },
+    { "slug": "unstitched", "image": "f1" },
+    { "slug": "accessories", "image": "a1" }
+  ],
+  "shopTheLook": {
+    "image": "look",
+    "hotspots": [
+      { "x": 38, "y": 30, "slug": "noor-embroidered-lawn-kurta" },
+      { "x": 60, "y": 55, "slug": "clutch-with-tilla-work" },
+      { "x": 46, "y": 78, "slug": "mehr-chiffon-dupatta-set" },
+      { "x": 70, "y": 22, "slug": "kundan-jhumka-earrings" }
+    ]
+  },
+  "unstitched": { "image": "f2" },
+  "bestSellerTabs": ["women", "men", "kids"],
+  "lookbook": ["w5", "m3", "w6", "k2", "w8", "m4"]
+}
