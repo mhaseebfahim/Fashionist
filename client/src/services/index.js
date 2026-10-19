@@ -21,6 +21,7 @@ export const authService = {
 export const catalogService = {
   categories: () => api.get('/categories'),
   products: (params) => api.get('/products', { params }),
+  facets: (params) => api.get('/products/facets', { params }),
   product: (slug) => api.get(`/products/${slug}`),
   reviews: (id) => api.get(`/products/${id}/reviews`),
   addReview: (id, body) => api.post(`/products/${id}/reviews`, body),

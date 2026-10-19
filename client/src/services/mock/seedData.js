@@ -1,95 +1,176 @@
 // Shared demo data used by the client mock adapter AND server/scripts/seed.js.
 // Plain JS (no JSX / browser APIs) so Node can import it too.
+// Fashionist is a menswear store: topwear, bottomwear, jackets, suits, footwear and accessories.
 
 const u = (id, w = 900) => `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=75`;
 
+// Every photo below was checked by eye — menswear only, no women's/kids' shots.
 export const IMG = {
-  w1: u('1515886657613-9f3515b0c78f'),
-  w2: u('1509631179647-0177331693ae'),
-  w3: u('1496747611176-843222e1e57c'),
-  w4: u('1529139574466-a303027c1d8b'),
-  w5: u('1469334031218-e382a71b716b'),
-  w6: u('1539109136881-3be0616acf4b'),
-  w7: u('1485968579580-b6d095142e6e'),
-  w8: u('1524504388940-b1c1722653e1'),
-  m1: u('1507679799987-c73779587ccf'),
-  m2: u('1503342217505-b0a15ec3261c'),
-  m3: u('1617137968427-85924c800a22'),
-  m4: u('1490578474895-699cd4e2cf59'),
-  k1: u('1503919545889-aef636e10ad4'),
-  k2: u('1519457431-44ccd64a579b'),
-  f1: u('1558769132-cb1aea458c5e'),
-  f2: u('1528459801416-a9e53bbf4e17'),
-  a1: u('1611591437281-460bfbe1220a'),
-  a2: u('1584917865442-de89df76afd3'),
-  rack: u('1490481651871-ab68de25d43d', 1600),
-  look: u('1483985988355-763728e1935b', 1600),
-  rack2: u('1523381210434-271e8be1f52b', 1600),
+  // t-shirts & polos
+  tee1: u('1521572163474-6864f9cf17ab'), tee2: u('1583743814966-8936f5b7be1a'), tee3: u('1576566588028-4147f3842f27'), tee4: u('1586790170083-2f9ceadc732d'),
+  tee5: u('1618354691373-d851c5c3a990'), tee6: u('1622445275463-afa2ab738c34'), tee7: u('1564859228273-274232fdb516'), tee8: u('1622519407650-3df9883f76a5'),
+  teeStack: u('1562157873-818bc0726f68'), teeRack: u('1489987707025-afc232f7ea0f'), polo: u('1472099645785-5658abf4ff4e'),
+  // shirts
+  denimShirt: u('1596755094514-f87e34085b2c'), flannel: u('1607345366928-199ea26cfe3e'), tieDye: u('1626497764746-6dc36546b388'), polka: u('1563389234808-52344934935c'),
+  whiteShirt: u('1621072156002-e2fccdc0b176'), stripeRack: u('1596609548086-85bbf8ddb6b9'), shirtTrio: u('1602810318383-e386cc2a3ccf'), shirtTie: u('1598033129183-c4f50c736f10'),
+  blueShirt: u('1620012253295-c15cc3e65df4'), shirtRack: u('1603252109303-2751441dd157'), shirtTies: u('1598032895397-b9472444bf93'),
+  // hoodies & sweatshirts
+  hoodie: u('1556821840-3a63f95609a7'), sweatWhite: u('1620799140408-edc6dcb6d633'), sweatBlack: u('1578681994506-b8f463449011'), sweatNavy: u('1614975059251-992f11792b9f'), hoodieRose: u('1516826957135-700dedea698c'),
+  // jeans, trousers, shorts
+  jeans1: u('1542272604-787c3835535d'), jeans2: u('1541099649105-f69ad21f3246'), jeans3: u('1604176354204-9268737828e4'), jeans4: u('1565084888279-aca607ecce0c'), jeans5: u('1582552938357-32b906df40cb'), jeans6: u('1555689502-c4b22d76c56f'),
+  trouser: u('1624378439575-d8705ad7ae80'), chino: u('1473966968600-fa801b869a1a'), chinoLook: u('1488161628813-04466f872be2'), shorts1: u('1506629082955-511b1aa562c8'), shorts2: u('1617952236317-0bd127407984'),
+  // jackets
+  bomber: u('1591047139829-d91aecb6caea'), leather: u('1551028719-00167b16eac5'), leatherMan: u('1520975954732-35dd22299614'), brownJacket: u('1614252369475-531eba835eb1'), denimJacket: u('1611312449408-fcece27cdbb7'), suede: u('1617114919297-3c8ddb01f599'),
+  // suits & blazers
+  suit1: u('1507679799987-c73779587ccf'), suit2: u('1617137968427-85924c800a22'), suitCheck: u('1594938298603-c8148c4dae35'), suitGreen: u('1593032465175-481ac7f401a0'), suitMan: u('1519085360753-af0119f7cbe7'),
+  blazerBlack: u('1617127365659-c47fa864d8bc'), blazers: u('1600091166971-7f9faad6c1e2'), flatlay: u('1593030761757-71fae45fa0e7'),
+  // footwear
+  sneaker1: u('1549298916-b41d501d3772'), sneaker2: u('1603808033192-082d6919d3e1'), sneaker3: u('1555274175-6cbf6f3b137b'), sneaker4: u('1539185441755-769473a23570'), sneaker5: u('1460353581641-37baddab0fa2'),
+  derby: u('1614252235316-8c857d38b5f4'), monk: u('1533867617858-e7b97e060509'), boots1: u('1608256246200-53e635b5b65f'), boots2: u('1520639888713-7851133b1ed0'),
+  // accessories
+  watch1: u('1523170335258-f5ed11844a49'), watch2: u('1524592094714-0f0654e20314'), sun1: u('1511499767150-a48a237f0083'), sun2: u('1572635196237-14b3f281503f'),
+  belt: u('1624222247344-550fb60583dc'), wallet: u('1627123424574-724758594e93'), cap: u('1588850561407-ed78c282e89b'), beanie: u('1576871337632-b9aef4c17ab9'), backpack: u('1553062407-98eeb64c6a62'),
+  // editorial (wide)
+  crew: u('1490578474895-699cd4e2cf59', 1600), rack: u('1489987707025-afc232f7ea0f', 1600), look: u('1593030761757-71fae45fa0e7', 1600), denimWall: u('1565084888279-aca607ecce0c', 1600), street: u('1617114919297-3c8ddb01f599', 1600), tailoring: u('1594938298603-c8148c4dae35', 1600),
 };
 
 export const slugify = (s) => String(s).toLowerCase().trim().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
 // parent: slug of the parent category (null = top level)
 export const categories = [
-  { slug: 'women', name: 'Women', nameUr: 'خواتین', image: IMG.w1, sortOrder: 1, parent: null },
-  { slug: 'men', name: 'Men', nameUr: 'مرد', image: IMG.m1, sortOrder: 2, parent: null },
-  { slug: 'kids', name: 'Kids', nameUr: 'بچے', image: IMG.k1, sortOrder: 3, parent: null },
-  { slug: 'unstitched', name: 'Unstitched', nameUr: 'ان سلا', image: IMG.f1, sortOrder: 4, parent: null },
-  { slug: 'accessories', name: 'Accessories', nameUr: 'لوازمات', image: IMG.a1, sortOrder: 5, parent: null },
-  { slug: 'lawn', name: 'Lawn', nameUr: 'لان', image: IMG.w3, sortOrder: 1, parent: 'women' },
-  { slug: 'formal', name: 'Formal', nameUr: 'فارمل', image: IMG.w2, sortOrder: 2, parent: 'women' },
-  { slug: 'bridal', name: 'Bridal', nameUr: 'برائیڈل', image: IMG.w5, sortOrder: 3, parent: 'women' },
-  { slug: 'kurta', name: 'Kurta', nameUr: 'کرتا', image: IMG.m3, sortOrder: 1, parent: 'men' },
-  { slug: 'shalwar-kameez', name: 'Shalwar Kameez', nameUr: 'شلوار قمیض', image: IMG.m2, sortOrder: 2, parent: 'men' },
-  { slug: 'khussa', name: 'Khussa', nameUr: 'کھسہ', image: IMG.a2, sortOrder: 1, parent: 'accessories' },
-  { slug: 'jewellery', name: 'Jewellery', nameUr: 'زیورات', image: IMG.a1, sortOrder: 2, parent: 'accessories' },
+  { slug: 'topwear', name: 'Topwear', nameUr: 'ٹاپ ویئر', image: IMG.tee4, sortOrder: 1, parent: null },
+  { slug: 'bottomwear', name: 'Bottomwear', nameUr: 'باٹم ویئر', image: IMG.jeans6, sortOrder: 2, parent: null },
+  { slug: 'jackets', name: 'Jackets', nameUr: 'جیکٹس', image: IMG.leatherMan, sortOrder: 3, parent: null },
+  { slug: 'suits-blazers', name: 'Suits & Blazers', nameUr: 'سوٹس اور بلیزرز', image: IMG.suitCheck, sortOrder: 4, parent: null },
+  { slug: 'footwear', name: 'Footwear', nameUr: 'جوتے', image: IMG.sneaker1, sortOrder: 5, parent: null },
+  { slug: 'accessories', name: 'Accessories', nameUr: 'لوازمات', image: IMG.watch1, sortOrder: 6, parent: null },
+  { slug: 't-shirts', name: 'T-Shirts', nameUr: 'ٹی شرٹس', image: IMG.tee1, sortOrder: 1, parent: 'topwear' },
+  { slug: 'polo-shirts', name: 'Polo Shirts', nameUr: 'پولو شرٹس', image: IMG.polo, sortOrder: 2, parent: 'topwear' },
+  { slug: 'casual-shirts', name: 'Casual Shirts', nameUr: 'کیژول شرٹس', image: IMG.flannel, sortOrder: 3, parent: 'topwear' },
+  { slug: 'formal-shirts', name: 'Formal Shirts', nameUr: 'فارمل شرٹس', image: IMG.shirtTie, sortOrder: 4, parent: 'topwear' },
+  { slug: 'hoodies-sweatshirts', name: 'Hoodies & Sweatshirts', nameUr: 'ہوڈیز اور سویٹ شرٹس', image: IMG.hoodie, sortOrder: 5, parent: 'topwear' },
+  { slug: 'jeans', name: 'Jeans', nameUr: 'جینز', image: IMG.jeans1, sortOrder: 1, parent: 'bottomwear' },
+  { slug: 'trousers-chinos', name: 'Trousers & Chinos', nameUr: 'ٹراؤزرز اور چینوز', image: IMG.chino, sortOrder: 2, parent: 'bottomwear' },
+  { slug: 'shorts', name: 'Shorts', nameUr: 'شارٹس', image: IMG.shorts2, sortOrder: 3, parent: 'bottomwear' },
+  { slug: 'suits', name: 'Suits', nameUr: 'سوٹس', image: IMG.suit1, sortOrder: 1, parent: 'suits-blazers' },
+  { slug: 'blazers', name: 'Blazers', nameUr: 'بلیزرز', image: IMG.blazerBlack, sortOrder: 2, parent: 'suits-blazers' },
+  { slug: 'sneakers', name: 'Sneakers', nameUr: 'سنیکرز', image: IMG.sneaker2, sortOrder: 1, parent: 'footwear' },
+  { slug: 'formal-shoes', name: 'Formal Shoes', nameUr: 'فارمل جوتے', image: IMG.derby, sortOrder: 2, parent: 'footwear' },
+  { slug: 'boots', name: 'Boots', nameUr: 'بوٹس', image: IMG.boots1, sortOrder: 3, parent: 'footwear' },
+  { slug: 'watches', name: 'Watches', nameUr: 'گھڑیاں', image: IMG.watch2, sortOrder: 1, parent: 'accessories' },
+  { slug: 'sunglasses', name: 'Sunglasses', nameUr: 'دھوپ کے چشمے', image: IMG.sun1, sortOrder: 2, parent: 'accessories' },
+  { slug: 'belts-wallets', name: 'Belts & Wallets', nameUr: 'بیلٹ اور والٹ', image: IMG.belt, sortOrder: 3, parent: 'accessories' },
+  { slug: 'caps-bags', name: 'Caps & Bags', nameUr: 'کیپس اور بیگز', image: IMG.backpack, sortOrder: 4, parent: 'accessories' },
 ];
 
-const SIZES = { W: ['XS', 'S', 'M', 'L', 'XL'], M: ['S', 'M', 'L', 'XL'], K: ['2Y', '4Y', '6Y', '8Y', '10Y'], F: ['1 metre'], O: ['One Size'], S: ['36', '37', '38', '39', '40'] };
+const SIZES = { T: ['S', 'M', 'L', 'XL', 'XXL'], W: ['30', '32', '34', '36', '38'], SU: ['38', '40', '42', '44'], SH: ['40', '41', '42', '43', '44'], O: ['One Size'] };
 
 // [title, titleUr, category, price, compareAt, attributes, colours, sizeSet, tags, images, featured]
 const P = [
-  ['Noor Embroidered Lawn Kurta', 'نور کڑھائی والا لان کرتا', 'lawn', 6490, 7990, { fabric: 'Lawn', pieces: '1 Piece', fit: 'Straight' }, ['Ivory', 'Rose'], 'W', ['eid', 'new'], ['w1', 'w5'], true],
-  ['Gul Bahar Printed Lawn 3-Piece', 'گل بہار پرنٹڈ لان تھری پیس', 'lawn', 5990, 0, { fabric: 'Lawn', pieces: '3 Piece', dupatta: 'Chiffon' }, ['Blush', 'Sage'], 'W', ['new'], ['w3', 'w7']],
-  ['Sehar Chikankari Lawn Shirt', 'سحر چکن کاری لان شرٹ', 'lawn', 4490, 5290, { fabric: 'Lawn', pieces: '1 Piece', work: 'Chikankari' }, ['White', 'Sky'], 'W', ['summer'], ['w4', 'w8']],
-  ['Mehak Digital Lawn 2-Piece', 'مہک ڈیجیٹل لان ٹو پیس', 'lawn', 3990, 0, { fabric: 'Lawn', pieces: '2 Piece' }, ['Rust', 'Ink'], 'W', ['casual'], ['w6', 'w2']],
-  ['Ruhi Schiffli Lawn Suit', 'روحی شفلی لان سوٹ', 'lawn', 7490, 8990, { fabric: 'Lawn', pieces: '3 Piece', dupatta: 'Organza' }, ['Ivory', 'Gold'], 'W', ['eid'], ['w5', 'w1']],
-  ['Anaya Block Print Kurta', 'انایہ بلاک پرنٹ کرتا', 'lawn', 2990, 0, { fabric: 'Lawn', pieces: '1 Piece' }, ['Sand', 'Rose'], 'W', ['new', 'casual'], ['w8', 'w4']],
-  ['Zara Silk Three-Piece', 'زارا ریشمی تین پیس', 'formal', 14990, 0, { fabric: 'Silk', pieces: '3 Piece', dupatta: 'Organza' }, ['Ink', 'Gold'], 'W', ['eid', 'formal', 'new'], ['w2', 'w6'], true],
-  ['Mehr Chiffon Dupatta Set', 'مہر شیفون دوپٹہ سیٹ', 'formal', 8990, 11240, { fabric: 'Chiffon', pieces: '2 Piece', dupatta: 'Chiffon' }, ['Blush', 'Sage'], 'W', ['festive'], ['w3', 'w7'], true],
-  ['Aiza Organza Angrakha', 'عائزہ آرگنزا انگرکھا', 'formal', 12490, 0, { fabric: 'Organza', pieces: '3 Piece' }, ['Ivory'], 'W', ['formal', 'new'], ['w5', 'w1'], true],
-  ['Shanzay Velvet Shawl Suit', 'شانزے ویلویٹ شال سوٹ', 'formal', 18990, 21990, { fabric: 'Velvet', pieces: '3 Piece', dupatta: 'Velvet Shawl' }, ['Ink', 'Rose'], 'W', ['winter', 'formal'], ['w6', 'w2']],
-  ['Laila Jamawar Kurta', 'لیلیٰ جامہ وار کرتا', 'formal', 9990, 0, { fabric: 'Jamawar', pieces: '1 Piece' }, ['Gold', 'Ink'], 'W', ['festive'], ['w7', 'w3']],
-  ['Rania Bridal Lehenga', 'رانیہ برائیڈل لہنگا', 'bridal', 24990, 0, { fabric: 'Raw Silk', pieces: '3 Piece', work: 'Zardozi' }, ['Rose', 'Gold'], 'W', ['bridal', 'new'], ['w1', 'w2'], true],
-  ['Mahrukh Nikkah Sharara', 'ماہ رخ نکاح شرارہ', 'bridal', 22490, 0, { fabric: 'Organza', pieces: '3 Piece', work: 'Gota' }, ['Ivory', 'Blush'], 'W', ['bridal'], ['w5', 'w3']],
-  ['Dua Mehndi Gharara', 'دعا مہندی غرارہ', 'bridal', 16990, 19990, { fabric: 'Silk', pieces: '3 Piece', work: 'Gota' }, ['Sage', 'Gold'], 'W', ['bridal', 'eid'], ['w7', 'w4']],
-  ['Saba Cotton Co-ord', 'صبا کاٹن کو آرڈ', 'women', 4990, 0, { fabric: 'Cotton', pieces: '2 Piece', fit: 'Relaxed' }, ['Sand', 'Ink'], 'W', ['casual', 'new'], ['w4', 'w8']],
-  ['Hira Printed Khaddar Shirt', 'حرا پرنٹڈ کھدر شرٹ', 'women', 3490, 4360, { fabric: 'Khaddar', pieces: '1 Piece' }, ['Rust', 'Ink'], 'W', ['winter'], ['w6', 'w2']],
-  ['Rumi Linen Kurta', 'رومی لینن کرتا', 'kurta', 6490, 0, { fabric: 'Linen', pieces: '1 Piece', fit: 'Regular' }, ['Ivory', 'Sand'], 'M', ['eid', 'new'], ['m1', 'm3'], true],
-  ['Ayan Cotton Kurta', 'ایان کاٹن کرتا', 'kurta', 3990, 0, { fabric: 'Cotton', pieces: '1 Piece' }, ['White', 'Sky'], 'M', ['casual'], ['m4', 'm2']],
-  ['Daud Embroidered Kurta', 'داؤد کڑھائی والا کرتا', 'kurta', 7990, 8990, { fabric: 'Cotton Silk', pieces: '1 Piece', work: 'Threadwork' }, ['Ink', 'Gold'], 'M', ['festive', 'new'], ['m3', 'm1']],
-  ['Zayan Karandi Kurta', 'زیان کرنڈی کرتا', 'kurta', 5490, 0, { fabric: 'Karandi', pieces: '1 Piece' }, ['Stone', 'Ink'], 'M', ['winter'], ['m2', 'm4']],
-  ['Faris Jacquard Kurta', 'فارس جیکارڈ کرتا', 'kurta', 6990, 0, { fabric: 'Jacquard', pieces: '1 Piece' }, ['Sand', 'Gold'], 'M', ['eid'], ['m1', 'm2']],
-  ['Shahzad Wash & Wear Shalwar Kameez', 'شہزاد واش اینڈ ویئر شلوار قمیض', 'shalwar-kameez', 5490, 6490, { fabric: 'Wash & Wear', pieces: '2 Piece' }, ['Ink', 'Stone'], 'M', ['classic'], ['m2', 'm4']],
-  ['Hamza Boski Shalwar Kameez', 'حمزہ بوسکی شلوار قمیض', 'shalwar-kameez', 8490, 0, { fabric: 'Boski', pieces: '2 Piece' }, ['Gold', 'Ivory'], 'M', ['eid', 'new'], ['m3', 'm1']],
-  ['Umar Cotton Shalwar Kameez', 'عمر کاٹن شلوار قمیض', 'shalwar-kameez', 4490, 0, { fabric: 'Cotton', pieces: '2 Piece' }, ['White', 'Sky'], 'M', ['summer'], ['m4', 'm3']],
-  ['Bilal Khaddar Shalwar Kameez', 'بلال کھدر شلوار قمیض', 'shalwar-kameez', 5990, 0, { fabric: 'Khaddar', pieces: '2 Piece' }, ['Rust', 'Stone'], 'M', ['winter'], ['m1', 'm4']],
-  ['Daud Jamawar Waistcoat', 'داؤد جامہ وار واسکٹ', 'men', 8990, 0, { fabric: 'Jamawar', pieces: '1 Piece' }, ['Ink', 'Gold'], 'M', ['festive'], ['m3', 'm2']],
-  ['Little Noor Frock', 'ننھی نور فراک', 'kids', 2990, 0, { fabric: 'Cotton', age: '2–10 yrs' }, ['Blush', 'Ivory'], 'K', ['eid', 'new'], ['k1', 'k2'], true],
-  ['Mini Rumi Kurta Set', 'منی رومی کرتا سیٹ', 'kids', 3290, 3990, { fabric: 'Linen', pieces: '2 Piece' }, ['Ivory'], 'K', ['eid'], ['k2', 'k1']],
-  ['Gudiya Gharara Set', 'گڑیا غرارہ سیٹ', 'kids', 4490, 0, { fabric: 'Silk', pieces: '3 Piece' }, ['Rose', 'Gold'], 'K', ['festive'], ['k1', 'k2']],
-  ['Shehzada Sherwani', 'شہزادہ شیروانی', 'kids', 6990, 0, { fabric: 'Jamawar', pieces: '2 Piece' }, ['Ivory', 'Gold'], 'K', ['festive', 'new'], ['k2', 'k1']],
-  ['Tara Printed Lawn Frock', 'تارا پرنٹڈ لان فراک', 'kids', 1990, 0, { fabric: 'Lawn' }, ['Sky', 'Blush'], 'K', ['summer'], ['k1', 'k2']],
-  ['Gulnar Jacquard Fabric', 'گلنار جیکارڈ کپڑا', 'unstitched', 1990, 0, { fabric: 'Jacquard', soldBy: 'metre', width: '54 inch' }, ['Rose', 'Ink'], 'F', ['unstitched', 'new'], ['f1', 'f2'], true],
-  ['Pure Raw Silk by the Metre', 'خالص را سلک فی میٹر', 'unstitched', 2490, 0, { fabric: 'Raw Silk', soldBy: 'metre', width: '44 inch' }, ['Gold', 'Ivory'], 'F', ['unstitched'], ['f2', 'f1']],
-  ['Premium Lawn by the Metre', 'پریمیم لان فی میٹر', 'unstitched', 1990, 0, { fabric: 'Lawn', soldBy: 'metre', width: '42 inch' }, ['White', 'Blush'], 'F', ['unstitched', 'summer'], ['f1', 'f2']],
-  ['Chiffon Dupatta Fabric', 'شیفون دوپٹہ کپڑا', 'unstitched', 2190, 0, { fabric: 'Chiffon', soldBy: 'metre', width: '44 inch' }, ['Sage', 'Blush'], 'F', ['unstitched'], ['f2', 'f1']],
-  ['Unstitched Embroidered Lawn 3-Piece', 'ان سلا کڑھائی والا لان تھری پیس', 'unstitched', 5490, 6490, { fabric: 'Lawn', pieces: '3 Piece', dupatta: 'Chiffon' }, ['Ivory', 'Rose'], 'O', ['unstitched', 'eid'], ['f1', 'w3']],
-  ['Kundan Jhumka Earrings', 'کندن جھمکے', 'jewellery', 2290, 0, { material: 'Gold-plated brass' }, ['Gold'], 'O', ['jewellery', 'new'], ['a1', 'a2']],
-  ['Polki Choker Set', 'پولکی چوکر سیٹ', 'jewellery', 6990, 7990, { material: 'Polki & pearls' }, ['Gold'], 'O', ['jewellery', 'bridal'], ['a1', 'a2']],
-  ['Tilla Khussa', 'تلہ کھسہ', 'khussa', 3490, 0, { material: 'Leather', work: 'Tilla' }, ['Gold', 'Ink'], 'S', ['khussa', 'eid'], ['a2', 'a1']],
-  ['Velvet Khussa', 'ویلویٹ کھسہ', 'khussa', 2990, 3490, { material: 'Velvet' }, ['Rose', 'Ink'], 'S', ['khussa'], ['a2', 'a1']],
+  // ---- T-shirts ----
+  ['Essential Crew Neck Tee', 'ایسنشل کریو نیک ٹی شرٹ', 't-shirts', 1490, 0, { fabric: 'Cotton', fit: 'Regular', sleeve: 'Short', occasion: 'Casual' }, ['White', 'Black', 'Navy'], 'T', ['new', 'basics', 'summer'], ['tee1', 'tee4'], true],
+  ['Heavyweight Oversized Tee', 'ہیوی ویٹ اوور سائز ٹی شرٹ', 't-shirts', 1990, 0, { fabric: 'Cotton', fit: 'Oversized', sleeve: 'Short', occasion: 'Casual' }, ['Black', 'White'], 'T', ['new', 'streetwear'], ['tee2', 'tee6']],
+  ['Original Graphic Print Tee', 'اوریجنل گرافک پرنٹ ٹی شرٹ', 't-shirts', 1790, 2190, { fabric: 'Cotton', fit: 'Regular', sleeve: 'Short', occasion: 'Casual' }, ['Beige'], 'T', ['graphic', 'streetwear'], ['tee3', 'tee7']],
+  ['Sunset Back Print Tee', 'سن سیٹ بیک پرنٹ ٹی شرٹ', 't-shirts', 1890, 0, { fabric: 'Cotton', fit: 'Relaxed', sleeve: 'Short', occasion: 'Casual' }, ['White'], 'T', ['graphic', 'summer'], ['tee7', 'tee3']],
+  ['Contrast Stitch Ribbed Tee', 'کنٹراسٹ سٹچ ربڈ ٹی شرٹ', 't-shirts', 1690, 0, { fabric: 'Cotton Blend', fit: 'Slim', sleeve: 'Short', occasion: 'Casual' }, ['Black'], 'T', ['new'], ['tee8', 'tee5']],
+  ['Pima Cotton V-Neck Tee', 'پیما کاٹن وی نیک ٹی شرٹ', 't-shirts', 2290, 0, { fabric: 'Pima Cotton', fit: 'Slim', sleeve: 'Short', occasion: 'Casual' }, ['White', 'Grey'], 'T', ['basics'], ['tee4', 'tee1']],
+  ['Everyday Basics Tee 3-Pack', 'روزمرہ بیسک ٹی شرٹس تین پیک', 't-shirts', 3490, 4470, { fabric: 'Cotton', fit: 'Regular', sleeve: 'Short', occasion: 'Casual' }, ['Mixed'], 'T', ['basics', 'value', 'sale'], ['teeStack', 'teeRack'], true],
+  ['Longline Slub Tee', 'لانگ لائن سلب ٹی شرٹ', 't-shirts', 1590, 0, { fabric: 'Slub Cotton', fit: 'Relaxed', sleeve: 'Short', occasion: 'Casual' }, ['Olive', 'Charcoal'], 'T', ['streetwear'], ['teeRack', 'tee5']],
+  ['Logo Badge Crew Tee', 'لوگو بیج کریو ٹی شرٹ', 't-shirts', 1690, 1990, { fabric: 'Cotton', fit: 'Regular', sleeve: 'Short', occasion: 'Casual' }, ['Black'], 'T', ['sale'], ['tee5', 'tee2']],
+  // ---- Polo shirts ----
+  ['Classic Pique Polo', 'کلاسک پیکے پولو شرٹ', 'polo-shirts', 2490, 0, { fabric: 'Pique Cotton', fit: 'Regular', sleeve: 'Short', occasion: 'Smart Casual' }, ['Olive', 'Navy', 'White'], 'T', ['new', 'summer'], ['polo', 'teeStack'], true],
+  ['Tipped Collar Polo', 'ٹپڈ کالر پولو شرٹ', 'polo-shirts', 2790, 3290, { fabric: 'Pique Cotton', fit: 'Slim', sleeve: 'Short', occasion: 'Smart Casual' }, ['Black', 'White'], 'T', ['sale'], ['polo', 'tee8']],
+  ['Knitted Resort Polo', 'نٹڈ ریزورٹ پولو شرٹ', 'polo-shirts', 3290, 0, { fabric: 'Cotton Knit', fit: 'Relaxed', sleeve: 'Short', occasion: 'Smart Casual' }, ['Sand', 'Navy'], 'T', ['new'], ['polo', 'tee4']],
+  // ---- Casual shirts ----
+  ['Washed Denim Shirt', 'واشڈ ڈینم شرٹ', 'casual-shirts', 3990, 0, { fabric: 'Denim', fit: 'Regular', sleeve: 'Full', occasion: 'Casual' }, ['Indigo'], 'T', ['new', 'denim'], ['denimShirt', 'jeans4'], true],
+  ['Brushed Flannel Check Shirt', 'برشڈ فلالین چیک شرٹ', 'casual-shirts', 3790, 0, { fabric: 'Flannel', fit: 'Regular', sleeve: 'Full', occasion: 'Casual' }, ['Olive', 'Maroon'], 'T', ['winter', 'check'], ['flannel', 'stripeRack']],
+  ['Tie-Dye Resort Shirt', 'ٹائی ڈائی ریزورٹ شرٹ', 'casual-shirts', 3290, 3790, { fabric: 'Viscose', fit: 'Relaxed', sleeve: 'Half', occasion: 'Vacation' }, ['Sky', 'Rust'], 'T', ['summer', 'sale'], ['tieDye', 'polka']],
+  ['Polka Dot Short Sleeve Shirt', 'پولکا ڈاٹ ہاف سلیو شرٹ', 'casual-shirts', 2990, 0, { fabric: 'Cotton', fit: 'Slim', sleeve: 'Half', occasion: 'Casual' }, ['Navy'], 'T', ['summer'], ['polka', 'tieDye']],
+  ['Oxford Button-Down Shirt', 'آکسفورڈ بٹن ڈاؤن شرٹ', 'casual-shirts', 3490, 0, { fabric: 'Oxford Cotton', fit: 'Regular', sleeve: 'Full', occasion: 'Smart Casual' }, ['White', 'Light Blue'], 'T', ['new', 'basics'], ['whiteShirt', 'shirtRack'], true],
+  ['Linen Blend Camp Collar Shirt', 'لینن بلینڈ کیمپ کالر شرٹ', 'casual-shirts', 3690, 0, { fabric: 'Linen Blend', fit: 'Relaxed', sleeve: 'Half', occasion: 'Vacation' }, ['Sand', 'White'], 'T', ['summer', 'new'], ['whiteShirt', 'tieDye']],
+  ['Striped Cotton Shirt', 'دھاری دار کاٹن شرٹ', 'casual-shirts', 2990, 3490, { fabric: 'Cotton', fit: 'Regular', sleeve: 'Full', occasion: 'Casual' }, ['Navy'], 'T', ['sale'], ['stripeRack', 'polka']],
+  // ---- Formal shirts ----
+  ['Slim Fit Poplin Dress Shirt', 'سلم فٹ پاپلن ڈریس شرٹ', 'formal-shirts', 3290, 0, { fabric: 'Poplin', fit: 'Slim', sleeve: 'Full', occasion: 'Formal' }, ['White', 'Light Blue'], 'T', ['office', 'basics'], ['shirtTie', 'shirtRack'], true],
+  ['Non-Iron Twill Formal Shirt', 'نان آئرن ٹوئل فارمل شرٹ', 'formal-shirts', 3790, 0, { fabric: 'Twill', fit: 'Regular', sleeve: 'Full', occasion: 'Formal' }, ['Light Blue', 'Pink'], 'T', ['office', 'new'], ['blueShirt', 'shirtTies']],
+  ['Premium Satin Finish Shirt', 'پریمیم ساٹن فنش شرٹ', 'formal-shirts', 3990, 4690, { fabric: 'Cotton Satin', fit: 'Slim', sleeve: 'Full', occasion: 'Party' }, ['Grey', 'White', 'Maroon'], 'T', ['party', 'sale'], ['shirtTrio', 'shirtRack']],
+  ['Cutaway Collar Business Shirt', 'کٹ اوے کالر بزنس شرٹ', 'formal-shirts', 3490, 0, { fabric: 'Cotton', fit: 'Regular', sleeve: 'Full', occasion: 'Formal' }, ['White'], 'T', ['office'], ['shirtTies', 'shirtTie']],
+  // ---- Hoodies & sweatshirts ----
+  ['Fleece Pullover Hoodie', 'فلیس پل اوور ہوڈی', 'hoodies-sweatshirts', 3990, 4790, { fabric: 'Fleece', fit: 'Regular', sleeve: 'Full', occasion: 'Casual' }, ['Grey', 'Black'], 'T', ['winter', 'sale'], ['hoodie', 'sweatBlack'], true],
+  ['Essential Crew Sweatshirt', 'ایسنشل کریو سویٹ شرٹ', 'hoodies-sweatshirts', 3290, 0, { fabric: 'Cotton Fleece', fit: 'Regular', sleeve: 'Full', occasion: 'Casual' }, ['White', 'Navy'], 'T', ['winter', 'basics'], ['sweatWhite', 'sweatNavy']],
+  ['Embroidered Chest Sweatshirt', 'کڑھائی والی سویٹ شرٹ', 'hoodies-sweatshirts', 3590, 0, { fabric: 'Cotton Fleece', fit: 'Relaxed', sleeve: 'Full', occasion: 'Casual' }, ['Black', 'Navy'], 'T', ['new', 'streetwear'], ['sweatBlack', 'sweatNavy']],
+  ['Garment-Dyed Hoodie', 'گارمنٹ ڈائیڈ ہوڈی', 'hoodies-sweatshirts', 4290, 0, { fabric: 'French Terry', fit: 'Oversized', sleeve: 'Full', occasion: 'Casual' }, ['Pink', 'Grey'], 'T', ['new', 'streetwear'], ['hoodieRose', 'hoodie']],
+  // ---- Jeans ----
+  ['Slim Fit Stretch Jeans', 'سلم فٹ اسٹریچ جینز', 'jeans', 4490, 5290, { fabric: 'Stretch Denim', fit: 'Slim', occasion: 'Casual' }, ['Indigo', 'Black'], 'W', ['denim', 'new', 'sale'], ['jeans1', 'jeans3'], true],
+  ['Ripped Skinny Jeans', 'رپڈ اسکنی جینز', 'jeans', 4290, 0, { fabric: 'Stretch Denim', fit: 'Skinny', occasion: 'Casual' }, ['Light Blue'], 'W', ['denim', 'streetwear'], ['jeans2', 'jeans5']],
+  ['Straight Fit Selvedge Jeans', 'سٹریٹ فٹ سیلوج جینز', 'jeans', 5990, 0, { fabric: 'Selvedge Denim', fit: 'Straight', occasion: 'Casual' }, ['Indigo'], 'W', ['denim', 'premium'], ['jeans4', 'jeans1']],
+  ['Tapered Washed Jeans', 'ٹیپرڈ واشڈ جینز', 'jeans', 4790, 0, { fabric: 'Denim', fit: 'Tapered', occasion: 'Casual' }, ['Blue'], 'W', ['denim', 'new'], ['jeans6', 'jeans3']],
+  ['Relaxed Fit Light Wash Jeans', 'ریلیکسڈ فٹ لائٹ واش جینز', 'jeans', 4590, 0, { fabric: 'Denim', fit: 'Relaxed', occasion: 'Casual' }, ['Light Blue'], 'W', ['denim'], ['jeans5', 'jeans4']],
+  ['Black Distressed Jeans', 'بلیک ڈسٹریسڈ جینز', 'jeans', 4390, 4990, { fabric: 'Stretch Denim', fit: 'Slim', occasion: 'Casual' }, ['Black'], 'W', ['denim', 'sale', 'streetwear'], ['jeans3', 'jeans2']],
+  // ---- Trousers & chinos ----
+  ['Slim Stretch Chinos', 'سلم اسٹریچ چینوز', 'trousers-chinos', 3490, 0, { fabric: 'Cotton Twill', fit: 'Slim', occasion: 'Smart Casual' }, ['Khaki', 'Navy', 'Black'], 'W', ['new', 'basics'], ['chino', 'chinoLook'], true],
+  ['Wool-Blend Formal Trousers', 'وول بلینڈ فارمل ٹراؤزر', 'trousers-chinos', 4490, 0, { fabric: 'Wool Blend', fit: 'Slim', occasion: 'Formal' }, ['Charcoal', 'Black'], 'W', ['office'], ['trouser', 'flatlay']],
+  ['Cargo Jogger Pants', 'کارگو جوگر پینٹ', 'trousers-chinos', 3290, 3790, { fabric: 'Cotton', fit: 'Tapered', occasion: 'Casual' }, ['Olive', 'Khaki'], 'W', ['streetwear', 'sale'], ['chino', 'chinoLook']],
+  ['Pleated Smart Trousers', 'پلیٹڈ اسمارٹ ٹراؤزر', 'trousers-chinos', 3990, 0, { fabric: 'Poly Viscose', fit: 'Regular', occasion: 'Formal' }, ['Navy', 'Grey'], 'W', ['office', 'new'], ['trouser', 'chinoLook']],
+  ['Drawstring Linen Pants', 'ڈوری والی لینن پینٹ', 'trousers-chinos', 3290, 0, { fabric: 'Linen', fit: 'Relaxed', occasion: 'Vacation' }, ['Sand', 'White'], 'W', ['summer'], ['chinoLook', 'chino']],
+  // ---- Shorts ----
+  ['Cotton Chino Shorts', 'کاٹن چینو شارٹس', 'shorts', 2290, 0, { fabric: 'Cotton Twill', fit: 'Regular', occasion: 'Casual' }, ['Maroon', 'Khaki'], 'W', ['summer', 'new'], ['shorts2', 'shorts1'], true],
+  ['Jersey Lounge Shorts', 'جرسی لاؤنج شارٹس', 'shorts', 1790, 0, { fabric: 'Cotton Jersey', fit: 'Relaxed', occasion: 'Lounge' }, ['Grey'], 'W', ['summer', 'basics'], ['shorts1', 'shorts2']],
+  ['Quick-Dry Swim Shorts', 'کوئک ڈرائی سوئم شارٹس', 'shorts', 1990, 2490, { fabric: 'Polyester', fit: 'Regular', occasion: 'Vacation' }, ['Navy', 'Maroon'], 'W', ['summer', 'sale'], ['shorts2', 'shorts1']],
+  ['Drawstring Gym Shorts', 'ڈوری والی جم شارٹس', 'shorts', 1690, 0, { fabric: 'Polyester', fit: 'Regular', occasion: 'Sports' }, ['Grey', 'Black'], 'W', ['sports'], ['shorts1', 'shorts2']],
+  // ---- Jackets ----
+  ['Classic Bomber Jacket', 'کلاسک بمبر جیکٹ', 'jackets', 6990, 8490, { fabric: 'Nylon', fit: 'Regular', occasion: 'Casual' }, ['Tan', 'Black'], 'T', ['winter', 'sale'], ['bomber', 'leatherMan'], true],
+  ['Biker Leather Jacket', 'بائیکر لیدر جیکٹ', 'jackets', 14990, 0, { fabric: 'Genuine Leather', fit: 'Slim', occasion: 'Casual' }, ['Black'], 'T', ['winter', 'premium', 'new'], ['leather', 'leatherMan'], true],
+  ['Suede Trucker Jacket', 'سویڈ ٹرکر جیکٹ', 'jackets', 9990, 0, { fabric: 'Suede', fit: 'Regular', occasion: 'Smart Casual' }, ['Tan'], 'T', ['winter'], ['suede', 'brownJacket']],
+  ['Washed Denim Jacket', 'واشڈ ڈینم جیکٹ', 'jackets', 5990, 0, { fabric: 'Denim', fit: 'Regular', occasion: 'Casual' }, ['Indigo'], 'T', ['denim', 'new'], ['denimJacket', 'denimShirt']],
+  ['Leather Racer Jacket', 'لیدر ریسر جیکٹ', 'jackets', 13990, 15990, { fabric: 'Genuine Leather', fit: 'Slim', occasion: 'Casual' }, ['Brown'], 'T', ['winter', 'premium', 'sale'], ['brownJacket', 'suede']],
+  ['Utility Field Jacket', 'یوٹیلیٹی فیلڈ جیکٹ', 'jackets', 6490, 0, { fabric: 'Cotton Canvas', fit: 'Regular', occasion: 'Casual' }, ['Olive'], 'T', ['winter'], ['chinoLook', 'bomber']],
+  // ---- Suits ----
+  ['Navy Two-Piece Suit', 'نیوی ٹو پیس سوٹ', 'suits', 18990, 22990, { fabric: 'Wool Blend', fit: 'Slim', occasion: 'Formal' }, ['Navy'], 'SU', ['wedding', 'office', 'sale'], ['suit1', 'suitMan'], true],
+  ['Royal Blue Slim Suit', 'رائل بلیو سلم سوٹ', 'suits', 16990, 0, { fabric: 'Poly Viscose', fit: 'Slim', occasion: 'Party' }, ['Blue'], 'SU', ['party', 'new'], ['suit2', 'suit1']],
+  ['Prince of Wales Check Three-Piece Suit', 'پرنس آف ویلز چیک تھری پیس سوٹ', 'suits', 24990, 0, { fabric: 'Tweed Wool', fit: 'Tailored', occasion: 'Wedding' }, ['Blue'], 'SU', ['wedding', 'premium', 'new'], ['suitCheck', 'suit2'], true],
+  ['Emerald Wedding Suit', 'ایمرلڈ ویڈنگ سوٹ', 'suits', 21990, 0, { fabric: 'Wool Blend', fit: 'Tailored', occasion: 'Wedding' }, ['Green'], 'SU', ['wedding', 'party'], ['suitGreen', 'suitMan']],
+  ['Midnight Black Tuxedo', 'مڈنائٹ بلیک ٹکسیڈو', 'suits', 23990, 26990, { fabric: 'Wool Blend', fit: 'Slim', occasion: 'Wedding' }, ['Black'], 'SU', ['wedding', 'premium', 'sale'], ['suitMan', 'blazerBlack']],
+  // ---- Blazers ----
+  ['Black Textured Blazer', 'بلیک ٹیکسچرڈ بلیزر', 'blazers', 9990, 11990, { fabric: 'Poly Viscose', fit: 'Slim', occasion: 'Party' }, ['Black'], 'SU', ['party', 'sale'], ['blazerBlack', 'blazers'], true],
+  ['Windowpane Check Blazer', 'ونڈو پین چیک بلیزر', 'blazers', 10990, 0, { fabric: 'Wool Blend', fit: 'Regular', occasion: 'Smart Casual' }, ['Grey'], 'SU', ['check', 'new'], ['blazers', 'flatlay']],
+  ['Camel Smart Blazer', 'کیمل اسمارٹ بلیزر', 'blazers', 9490, 0, { fabric: 'Cotton Blend', fit: 'Regular', occasion: 'Smart Casual' }, ['Tan'], 'SU', ['office'], ['flatlay', 'blazers']],
+  // ---- Sneakers ----
+  ['Tan Leather Low-Top Sneakers', 'ٹین لیدر لو ٹاپ سنیکرز', 'sneakers', 7990, 0, { material: 'Leather', occasion: 'Casual' }, ['Tan'], 'SH', ['new', 'footwear'], ['sneaker1', 'sneaker2'], true],
+  ['Minimal White Court Sneakers', 'منیمل وائٹ کورٹ سنیکرز', 'sneakers', 5990, 6990, { material: 'Synthetic Leather', occasion: 'Casual' }, ['White'], 'SH', ['basics', 'sale'], ['sneaker2', 'sneaker3'], true],
+  ['Knit Runner Sneakers', 'نٹ رنر سنیکرز', 'sneakers', 6490, 0, { material: 'Knit Mesh', occasion: 'Sports' }, ['White'], 'SH', ['sports'], ['sneaker3', 'sneaker5']],
+  ['Olive Suede Trainers', 'زیتونی سویڈ ٹرینرز', 'sneakers', 6990, 0, { material: 'Suede', occasion: 'Casual' }, ['Olive'], 'SH', ['new'], ['sneaker4', 'sneaker1']],
+  ['Grey Mesh Sports Shoes', 'گرے میش اسپورٹس شوز', 'sneakers', 5490, 0, { material: 'Mesh', occasion: 'Sports' }, ['Grey'], 'SH', ['sports'], ['sneaker5', 'sneaker3']],
+  // ---- Formal shoes & boots ----
+  ['Brown Leather Derby Shoes', 'براؤن لیدر ڈربی شوز', 'formal-shoes', 8990, 0, { material: 'Genuine Leather', occasion: 'Formal' }, ['Brown'], 'SH', ['office', 'wedding'], ['derby', 'monk']],
+  ['Double Monk Strap Shoes', 'ڈبل مونک اسٹریپ شوز', 'formal-shoes', 9990, 11490, { material: 'Genuine Leather', occasion: 'Formal' }, ['Brown'], 'SH', ['wedding', 'sale'], ['monk', 'derby'], true],
+  ['Leather Lace-Up Boots', 'لیدر لیس اپ بوٹس', 'boots', 10990, 0, { material: 'Genuine Leather', occasion: 'Casual' }, ['Brown'], 'SH', ['winter', 'new'], ['boots1', 'boots2']],
+  ['Rugged Work Boots', 'مضبوط ورک بوٹس', 'boots', 11990, 0, { material: 'Nubuck Leather', occasion: 'Outdoor' }, ['Tan'], 'SH', ['winter'], ['boots2', 'boots1']],
+  // ---- Accessories ----
+  ['Chronograph Steel Watch', 'کرونوگراف اسٹیل گھڑی', 'watches', 14990, 17990, { material: 'Stainless Steel' }, ['Silver'], 'O', ['premium', 'gift', 'sale'], ['watch1', 'watch2'], true],
+  ['Minimal Leather Strap Watch', 'منیمل لیدر اسٹریپ گھڑی', 'watches', 7990, 0, { material: 'Leather' }, ['Brown'], 'O', ['gift', 'new'], ['watch2', 'watch1']],
+  ['Round Metal Sunglasses', 'گول میٹل دھوپ کا چشمہ', 'sunglasses', 2990, 0, { material: 'Metal' }, ['Gold'], 'O', ['summer'], ['sun1', 'sun2']],
+  ['Classic Wayfarer Sunglasses', 'کلاسک وے فیرر دھوپ کا چشمہ', 'sunglasses', 2490, 2990, { material: 'Acetate' }, ['Black'], 'O', ['summer', 'sale'], ['sun2', 'sun1']],
+  ['Full-Grain Leather Belt', 'فل گرین لیدر بیلٹ', 'belts-wallets', 2490, 0, { material: 'Genuine Leather' }, ['Brown', 'Black'], 'O', ['basics', 'gift'], ['belt', 'wallet']],
+  ['Bifold Leather Wallet', 'بائی فولڈ لیدر والٹ', 'belts-wallets', 2290, 0, { material: 'Genuine Leather' }, ['Brown'], 'O', ['gift', 'new'], ['wallet', 'belt']],
+  ['Classic Trucker Cap', 'کلاسک ٹرکر کیپ', 'caps-bags', 1290, 0, { material: 'Cotton Mesh' }, ['White'], 'O', ['summer'], ['cap', 'beanie']],
+  ['Ribbed Knit Beanie', 'ربڈ نٹ بینی ٹوپی', 'caps-bags', 990, 0, { material: 'Acrylic Knit' }, ['Black', 'Maroon'], 'O', ['winter'], ['beanie', 'cap']],
+  ['Everyday Laptop Backpack', 'روزمرہ لیپ ٹاپ بیگ', 'caps-bags', 4990, 5990, { material: 'Water-resistant Polyester' }, ['Navy'], 'O', ['office', 'sale'], ['backpack', 'wallet']],
 ];
+
+const CARE = { Cotton: 'Machine wash cold, tumble dry low.', Denim: 'Wash inside out in cold water to keep the colour.', Leather: 'Wipe clean; condition every few months.' };
+const care = (a) => CARE[Object.keys(CARE).find((k) => (a.fabric || a.material || '').includes(k))] || 'Follow the care label.';
+const describe = (title, a) =>
+  a.fabric
+    ? `${title} in ${a.fabric.toLowerCase()} with a ${String(a.fit || 'regular').toLowerCase()} fit — made for ${String(a.occasion || 'everyday').toLowerCase()} wear. ${care(a)}`
+    : `${title} in ${String(a.material).toLowerCase()} — built to last and finished with care. ${care(a)}`;
+
+const SIZE_GUIDE = {
+  T: 'Chest (inches): S 36–38 · M 38–40 · L 40–42 · XL 42–44 · XXL 44–46. Between sizes? Choose the larger one.',
+  W: 'Waist (inches): 30 · 32 · 34 · 36 · 38. Inseam 32". Measure around your natural waist.',
+  SU: 'Jacket chest (inches): 38 · 40 · 42 · 44. Trousers come one size down and can be altered.',
+  SH: 'EU sizes: 40 (UK 6) · 41 (UK 7) · 42 (UK 8) · 43 (UK 9) · 44 (UK 10).',
+  O: '',
+};
 
 export const products = P.map(([title, titleUr, category, price, compareAtPrice, attributes, colours, set, tags, imgs, featured], i) => ({
   title,
@@ -103,12 +184,12 @@ export const products = P.map(([title, titleUr, category, price, compareAtPrice,
   tags,
   isFeatured: !!featured,
   isActive: true,
-  description: `${title} — crafted in Pakistan from ${attributes.fabric || attributes.material}. Finished by hand, made to be worn for every story you tell.`,
-  descriptionUr: `${titleUr} — پاکستان میں تیار کردہ، ہاتھ سے مکمل کیا گیا۔`,
-  sizeGuide: attributes.soldBy === 'metre' ? 'Sold by the metre: a shirt needs ~2.5 m, a full suit ~5 m. Set the quantity to the number of metres.' : '',
-  seo: { metaTitle: `${title} | Fashionist`, metaDescription: `Shop ${title} at Fashionist. Cash on Delivery across Pakistan.` },
+  description: describe(title, attributes),
+  descriptionUr: `${titleUr} — معیاری مردانہ لباس، پورے پاکستان میں کیش آن ڈیلیوری۔`,
+  sizeGuide: SIZE_GUIDE[set],
+  seo: { metaTitle: `${title} | Fashionist`, metaDescription: `Shop the ${title} at Fashionist menswear. Cash on Delivery across Pakistan.` },
   variants: colours.flatMap((c, ci) =>
-    SIZES[set].map((s, si) => ({ sku: `FN${String(i + 1).padStart(3, '0')}-${c.slice(0, 3).toUpperCase()}-${s.replace(/\s+/g, '').toUpperCase()}`, size: s, colour: c, stock: (i * 7 + ci * 5 + si * 3) % 15 }))
+    SIZES[set].map((s, si) => ({ sku: `FN${String(i + 1).padStart(3, '0')}-${c.replace(/\s+/g, '').slice(0, 3).toUpperCase()}-${s.replace(/\s+/g, '').toUpperCase()}`, size: s, colour: c, stock: (i * 7 + ci * 5 + si * 3) % 15 || 6 }))
   ),
   rating: 0,
   numReviews: 0,
@@ -150,10 +231,12 @@ export const settings = {
 };
 
 const REVIEW_TEXT = [
-  'The embroidery is even more beautiful in person. Delivered in two days and paid at my door.',
-  'Fits perfectly — finally a brand that understands tailoring.',
-  'Rich colour and exactly like the photos. Will order again for Eid.',
-  'Lovely fabric, quick COD delivery and beautiful packaging.',
+  'Quality is even better in person. Delivered in two days and paid at my door.',
+  'Fits perfectly — the size guide was spot on.',
+  'Colour is exactly like the photos. Ordering another one for my brother.',
+  'Solid fabric, quick COD delivery and neat packaging.',
+  'Worn it to the office all week — still looks sharp.',
+  'Great value for the price. Exchange for a bigger size was effortless.',
 ];
 
 const day = 86400000;

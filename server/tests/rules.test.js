@@ -57,3 +57,21 @@ test('same-day is offered only in its city, and the cut-off decides today vs tom
   expect(sameDayFor('Lahore', s, at(9)).available).toBe(false);
   expect(sameDayFor('Multan', { sameDay: { ...s.sameDay, enabled: false } }).available).toBe(false);
 });
+
+test('search understands partial words, plurals and Roman-Urdu spellings', async () => {
+  const { parseQuery, scoreProduct, searchFields } = await import('../utils/search.js');
+  const jeans = searchFields({ title: 'Slim Fit Stretch Jeans', tags: ['denim'], attributes: { fit: 'Slim' }, variants: [{ colour: 'Indigo' }] }, ['Jeans', 'Bottomwear']);
+  const tee = searchFields({ title: 'Essential Crew Neck Tee', tags: ['basics'], attributes: {}, variants: [{ colour: 'Black' }] }, ['T-Shirts', 'Topwear']);
+  const chino = searchFields({ title: 'Slim Stretch Chinos', tags: [], attributes: { fit: 'Slim' }, variants: [{ colour: 'Khaki' }] }, ['Trousers & Chinos', 'Bottomwear']);
+  const hit = (q, f) => scoreProduct(f, parseQuery(q)) > 0;
+  expect(hit('jens', jeans)).toBe(true);
+  expect(hit('jeans', jeans)).toBe(true);
+  expect(hit('tshirt', tee)).toBe(true);
+  expect(hit('t shirts', tee)).toBe(true);
+  expect(hit('pent', chino)).toBe(true);
+  expect(hit('slim indigo', jeans)).toBe(true);
+  expect(hit('slim indigo', chino)).toBe(false); // every word must match
+  expect(hit('red', searchFields({ title: 'Tailored Blazer', tags: [], attributes: {}, variants: [{ colour: 'Grey' }] }))).toBe(false); // "red" ≠ "tailored"
+  expect(scoreProduct(jeans, parseQuery('jeans'))).toBeGreaterThan(scoreProduct(chino, parseQuery('jeans')));
+  expect(parseQuery('a')).toEqual([]);
+});

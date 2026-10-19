@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
@@ -6,11 +6,12 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Mic, Search, X } from 'lucide-react';
 import { Img, Skeleton } from './ui.jsx';
 import { addRecent, clearRecent, setSearchOpen } from '../features/store.js';
-import { useDebounce, useSpeech } from '../hooks/index.js';
+import { useAsync, useDebounce, useSpeech } from '../hooks/index.js';
+import { parseQuery, termRegex } from '../utils/search.js';
 import { catalogService } from '../services/index.js';
 import { pkr, tr } from '../utils/format.js';
 
-const TRENDING = ['Eid', 'Lawn', 'Silk', 'Kurta', 'Unstitched', 'Jhumka'];
+const TRENDING = ['Jeans', 'T-Shirt', 'Leather Jacket', 'Sneakers', 'Formal Shirt', 'Suit', 'Shorts', 'Watch'];
 
 export default function SearchOverlay() {
   const { t, i18n } = useTranslation();
@@ -28,6 +29,13 @@ export default function SearchOverlay() {
     close();
     nav(`/search?q=${encodeURIComponent(term.trim())}`);
   };
+  // Categories that match the typed words ("jeans", "pent", "joota") — a shortcut straight to the aisle.
+  const cats = useAsync(() => (searchOpen ? catalogService.categories() : Promise.resolve(null)), [searchOpen]);
+  const catHits = useMemo(() => {
+    const terms = parseQuery(dq);
+    if (!terms.length) return [];
+    return (cats.data?.categories || []).filter((c) => terms.every((alts) => termRegex(alts).test(`${c.name} ${c.nameUr || ''} ${c.slug.replace(/-/g, ' ')}`))).slice(0, 5);
+  }, [dq, cats.data]);
   const speech = useSpeech((text) => {
     setQ(text);
     go(text);
@@ -82,6 +90,11 @@ export default function SearchOverlay() {
                 </div>
               </div>
               <div className="md:col-span-2">
+                {catHits.length > 0 && (
+                  <div className="mb-8 flex flex-wrap gap-2">
+                    {catHits.map((c) => <Link key={c._id} to={`/shop/${c.slug}`} onClick={() => (dispatch(addRecent(dq)), close())} className="chip chip-active">{tr(c, 'name', i18n.language)} →</Link>)}
+                  </div>
+                )}
                 {results && <p className="label mb-4 text-muted">{t('search.suggestions')}</p>}
                 {results === 'loading' ? (
                   <div className="grid grid-cols-3 gap-4">{[0, 1, 2].map((i) => <Skeleton key={i} className="aspect-[3/4]" />)}</div>

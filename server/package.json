@@ -10,7 +10,8 @@
     "test": "node --experimental-vm-modules node_modules/jest/bin/jest.js --runInBand",
     "test:prepare": "node scripts/fetch-mongod.js",
     "smoke": "node scripts/smoke.js",
-    "dev:memory": "node scripts/dev-memory.js"
+    "dev:memory": "node scripts/dev-memory.js",
+    "seed:fresh": "node scripts/seed.js --reset"
   },
   "engines": {
     "node": ">=20"

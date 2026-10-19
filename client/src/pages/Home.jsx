@@ -5,7 +5,7 @@ import { useMeta } from '../components/ui.jsx';
 
 export default function Home() {
   const preview = useSelector((s) => s.cms.preview);
-  useMeta('', 'Fashionist — editorial Pakistani fashion. Lawn, formal, bridal, menswear, kids, unstitched fabric and accessories. Cash on Delivery nationwide.');
+  useMeta('', 'Fashionist — menswear in Pakistan. T-shirts, shirts, jeans, chinos, jackets, suits, sneakers and accessories. Cash on Delivery nationwide.');
   // Builder iframe: scroll to the section being edited.
   useEffect(() => {
     const onMsg = (e) => {

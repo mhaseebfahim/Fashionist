@@ -103,6 +103,9 @@ export function CategoryMosaic({ section }) {
 
 export function productQuery(c = {}) {
   const limit = c.limit || 10;
+  if (c.source === 'new') return { tag: 'new', sort: 'newest', limit };
+  if (c.source === 'sale') return { sale: 'true', sort: 'popular', limit };
+  if (c.source === 'latest') return { sort: 'newest', limit };
   if (c.source === 'featured') return { featured: 'true', limit };
   if (c.source === 'category') return { category: c.category, sort: 'popular', limit };
   if (c.source === 'manual') return { ids: (c.productIds || []).join(','), limit: Math.max(limit, c.productIds?.length || 0) };
@@ -112,11 +115,13 @@ export function productQuery(c = {}) {
 export function ProductRail({ section }) {
   const L = useL();
   const c = section.content || {};
+  const { t } = useTranslation();
   const { data, loading } = useAsync(() => (c.source === 'manual' && !c.productIds?.length ? Promise.resolve({ products: [] }) : catalogService.products(productQuery(c))), [JSON.stringify(c)]);
+  const viewAll = { new: '/shop?tag=new', sale: '/shop?sale=true', latest: '/shop?sort=newest', category: c.category && `/shop/${c.category}` }[c.source];
   if (!loading && !data?.products.length) return null;
   return (
     <section className="container-site py-16">
-      <Rail loading={loading} products={data?.products || []} title={<div>{L(section, 'subtitle') && <p className="label mb-3 text-gold">{L(section, 'subtitle')}</p>}<h2 className="text-4xl md:text-6xl">{L(section, 'title')}</h2></div>} />
+      <Rail loading={loading} products={data?.products || []} title={<div>{L(section, 'subtitle') && <p className="label mb-3 text-gold">{L(section, 'subtitle')}</p>}<h2 className="text-4xl md:text-6xl">{L(section, 'title')}</h2>{viewAll && <Link to={viewAll} className="label link-grow mt-4 inline-block">{t('home.viewAll')}</Link>}</div>} />
     </section>
   );
 }
@@ -184,7 +189,7 @@ export function Spotlight({ section }) {
 export function MostLoved({ section }) {
   const { t } = useTranslation();
   const L = useL();
-  const tabs = section.content?.tabs?.length ? section.content.tabs : ['women'];
+  const tabs = section.content?.tabs?.length ? section.content.tabs : ['topwear'];
   const [tab, setTab] = useState(tabs[0]);
   const cats = useAsync(() => catalogService.categories(), []);
   const name = (slug) => {

@@ -5,9 +5,10 @@ import Review from '../models/Review.js';
 import Order from '../models/Order.js';
 import Settings from '../models/Settings.js';
 import { AppError, asyncHandler } from '../utils/AppError.js';
+import { parseQuery, scoreProduct, searchFields, termRegex } from '../utils/search.js';
 
 const SORTS = { newest: { createdAt: -1, _id: -1 }, priceAsc: { price: 1 }, priceDesc: { price: -1 }, popular: { soldCount: -1 }, rating: { rating: -1, numReviews: -1 } };
-export const ATTR_FILTERS = ['fabric', 'pieces', 'dupatta', 'soldBy', 'fit', 'work', 'material', 'age'];
+export const ATTR_FILTERS = ['fabric', 'fit', 'sleeve', 'occasion', 'material'];
 const list = (v) => String(v).split(',').map((s) => s.trim()).filter(Boolean).slice(0, 20);
 
 /** Category id plus every descendant id. */
@@ -24,32 +25,110 @@ export const listCategories = asyncHandler(async (_req, res) => {
   res.json({ categories: await Category.find({ isActive: true }).sort('sortOrder name') });
 });
 
-export const listProducts = asyncHandler(async (req, res) => {
-  const { category, q, minPrice, maxPrice, size, colour, attr, inStock, featured, ids, sort = 'newest' } = req.query;
+/** Category docs with each one's own + parent names, so "jeans" finds products filed under Bottomwear › Jeans. */
+async function categoryIndex() {
+  const cats = await Category.find().select('name nameUr slug parent').lean();
+  const byId = new Map(cats.map((c) => [String(c._id), c]));
+  const names = (c) => [c.name, c.nameUr, c.slug.replace(/-/g, ' ')].filter(Boolean);
+  return new Map(cats.map((c) => [String(c._id), [...names(c), ...(c.parent && byId.get(String(c.parent)) ? names(byId.get(String(c.parent))) : [])]]));
+}
+
+/** Mongo filter shared by the product list and its facets (everything except search text). */
+async function productFilter(query, { skip = [] } = {}) {
+  const { category, minPrice, maxPrice, size, colour, attr, inStock, featured, ids, tag, sale } = query;
   const filter = { isActive: true };
   if (category) {
     const sub = await categorySubtree(String(category));
-    if (!sub) return res.json({ products: [], meta: { total: 0, page: 1, pages: 0 } });
+    if (!sub) return null;
     filter.category = { $in: sub };
   }
-  if (q) filter.$text = { $search: String(q).slice(0, 100) };
   if (minPrice || maxPrice) filter.price = { ...(minPrice && { $gte: +minPrice }), ...(maxPrice && { $lte: +maxPrice }) };
   const variant = {};
-  if (size) variant.size = { $in: list(size) };
-  if (colour) variant.colour = { $in: list(colour) };
+  if (size && !skip.includes('size')) variant.size = { $in: list(size) };
+  if (colour && !skip.includes('colour')) variant.colour = { $in: list(colour) };
   if (inStock === 'true') variant.stock = { $gt: 0 };
   if (Object.keys(variant).length) filter.variants = { $elemMatch: variant };
-  if (attr && typeof attr === 'object') for (const [k, v] of Object.entries(attr)) if (ATTR_FILTERS.includes(k)) filter[`attributes.${k}`] = { $in: list(v) };
+  if (attr && typeof attr === 'object') for (const [k, v] of Object.entries(attr)) if (ATTR_FILTERS.includes(k) && !skip.includes(k)) filter[`attributes.${k}`] = { $in: list(v) };
   if (featured === 'true') filter.isFeatured = true;
+  if (tag) filter.tags = { $in: list(tag).map((t) => t.toLowerCase()) };
+  if (sale === 'true') filter.$expr = { $gt: ['$compareAtPrice', '$price'] };
   if (ids) filter._id = { $in: list(ids).filter((x) => mongoose.isValidObjectId(x)) };
+  return filter;
+}
 
+/**
+ * Text search: every term must match the title, category, tags, attributes, colours or description.
+ * Mongo narrows the candidates with regexes, then each is scored (title hits first) in memory —
+ * fine for a boutique catalogue of a few thousand products.
+ */
+async function searchProducts(filter, q) {
+  const terms = parseQuery(q);
+  if (!terms.length) return null;
+  const cats = await categoryIndex();
+  const and = terms.map((alts) => {
+    const re = termRegex(alts);
+    const catIds = [...cats].filter(([, names]) => re.test(names.join(' '))).map(([id]) => new mongoose.Types.ObjectId(id));
+    return { $or: [{ title: re }, { titleUr: re }, { tags: re }, { description: re }, { 'variants.colour': re }, ...ATTR_FILTERS.map((k) => ({ [`attributes.${k}`]: re })), ...(catIds.length ? [{ category: { $in: catIds } }] : [])] };
+  });
+  const found = await Product.find({ ...filter, $and: [...(filter.$and || []), ...and] }).limit(500).populate('category', 'name nameUr slug');
+  return found
+    .map((p) => ({ p, score: scoreProduct(searchFields(p, cats.get(String(p.category?._id)) || []), terms) }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score || b.p.soldCount - a.p.soldCount)
+    .map((x) => x.p);
+}
+
+const SORTERS = { newest: (a, b) => b.createdAt - a.createdAt, priceAsc: (a, b) => a.price - b.price, priceDesc: (a, b) => b.price - a.price, popular: (a, b) => b.soldCount - a.soldCount, rating: (a, b) => b.rating - a.rating || b.numReviews - a.numReviews };
+
+export const listProducts = asyncHandler(async (req, res) => {
+  const { q, sort } = req.query;
   const limit = Math.min(Math.max(+req.query.limit || 12, 1), 48);
   const page = Math.max(+req.query.page || 1, 1);
+  const empty = { products: [], meta: { total: 0, page, pages: 0, limit } };
+  const filter = await productFilter(req.query);
+  if (!filter) return res.json(empty);
+
+  if (q && String(q).trim()) {
+    const hits = await searchProducts(filter, q);
+    if (hits) {
+      // Relevance by default; an explicit sort choice from the shopper wins.
+      if (SORTERS[sort]) hits.sort(SORTERS[sort]);
+      return res.json({ products: hits.slice((page - 1) * limit, page * limit), meta: { total: hits.length, page, pages: Math.ceil(hits.length / limit), limit } });
+    }
+  }
   const [products, total] = await Promise.all([
     Product.find(filter).sort(SORTS[sort] || SORTS.newest).skip((page - 1) * limit).limit(limit).populate('category', 'name nameUr slug'),
     Product.countDocuments(filter),
   ]);
   res.json({ products, meta: { total, page, pages: Math.ceil(total / limit), limit } });
+});
+
+const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+export const sortSizes = (sizes) =>
+  [...sizes].sort((a, b) => {
+    const [ia, ib] = [SIZE_ORDER.indexOf(a), SIZE_ORDER.indexOf(b)];
+    if (ia >= 0 || ib >= 0) return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    const [na, nb] = [parseFloat(a), parseFloat(b)];
+    return Number.isNaN(na) || Number.isNaN(nb) ? String(a).localeCompare(b) : na - nb;
+  });
+
+/** Filter options (with counts) for the current category / search, so the shop never offers a dead-end choice. */
+export const productFacets = asyncHandler(async (req, res) => {
+  const filter = await productFilter({ category: req.query.category, tag: req.query.tag, sale: req.query.sale });
+  const none = { sizes: [], colours: [], attributes: {}, price: { min: 0, max: 0 }, total: 0 };
+  if (!filter) return res.json({ facets: none });
+  const ps = req.query.q && String(req.query.q).trim() ? (await searchProducts(filter, req.query.q)) ?? (await Product.find(filter).lean()) : await Product.find(filter).select('price variants attributes').lean();
+  const count = (vals) => Object.entries(vals.reduce((m, v) => (v ? ((m[v] = (m[v] || 0) + 1), m) : m), {})).map(([value, n]) => ({ value, count: n }));
+  const attrOf = (p) => (p.attributes instanceof Map ? Object.fromEntries(p.attributes) : p.attributes || {});
+  const sizes = count(ps.flatMap((p) => [...new Set(p.variants.map((v) => v.size))]));
+  const facets = {
+    total: ps.length,
+    sizes: sortSizes(sizes.map((s) => s.value)).map((v) => sizes.find((s) => s.value === v)),
+    colours: count(ps.flatMap((p) => [...new Set(p.variants.map((v) => v.colour))])).sort((a, b) => b.count - a.count),
+    attributes: Object.fromEntries(ATTR_FILTERS.map((k) => [k, count(ps.map((p) => attrOf(p)[k])).sort((a, b) => b.count - a.count)]).filter(([, v]) => v.length > 1)),
+    price: { min: ps.length ? Math.min(...ps.map((p) => p.price)) : 0, max: ps.length ? Math.max(...ps.map((p) => p.price)) : 0 },
+  };
+  res.json({ facets });
 });
 
 export const getProduct = asyncHandler(async (req, res) => {

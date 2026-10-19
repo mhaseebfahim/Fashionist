@@ -1,10 +1,11 @@
 // In-browser mock of the Fashionist REST API (VITE_USE_MOCK=true). Mirrors the server's routes,
 // envelope ({ success, data, meta }) and business rules; state persists in localStorage.
 import * as seed from './seedData.js';
+import { parseQuery, scoreProduct, searchFields } from '../../utils/search.js';
 import { cmsDefaults } from '../../cms/defaults.js';
 import { ATTR_FILTERS, ORDER_STATUSES, canTransition, couponDiscount, couponError, deliveryFeeFor, isWithinReturnWindow, MAX_QTY, PHONE_RE, sameDayFor } from '../../utils/rules.js';
 
-const KEY = 'fashionist:mockdb:v4';
+const KEY = 'fashionist:mockdb:v5'; // v5: menswear catalogue
 const ENV = (typeof import.meta !== 'undefined' && import.meta.env) || {};
 // Mirrors the server flags. Set VITE_MOCK_EMAIL_VERIFICATION=true to try the OTP flow in the mock (code shown in a toast).
 const MOCK_OTP = ENV.VITE_MOCK_EMAIL_VERIFICATION === 'true';
@@ -157,33 +158,76 @@ function changeStatus(order, to, extra = {}) {
   order.statusHistory.push({ status: to, at: now(), note: extra.note });
 }
 
-function listProducts(q) {
+const catNames = (id) => {
+  const c = db.categories.find((x) => x._id === id);
+  const parent = c?.parent && db.categories.find((x) => x._id === c.parent);
+  return [c, parent].filter(Boolean).flatMap((x) => [x.name, x.nameUr, x.slug.replace(/-/g, ' ')]);
+};
+
+/** Same rules as the server: category, tag, sale, price, variants, attributes (search is scored separately). */
+function filterProducts(q, skip = []) {
   let list = db.products.filter((p) => p.isActive);
   if (q.category) {
     const ids = subtree(q.category) || [];
     list = list.filter((p) => ids.includes(p.category));
   }
-  if (q.q) {
-    const words = String(q.q).toLowerCase().split(/\s+/).filter(Boolean);
-    list = list.filter((p) => {
-      const hay = [p.title, p.titleUr, p.description, ...(p.tags || []), ...Object.values(p.attributes || {})].join(' ').toLowerCase();
-      return words.some((w) => hay.includes(w));
-    });
-  }
+  if (q.tag) list = list.filter((p) => String(q.tag).toLowerCase().split(',').some((t) => p.tags?.includes(t)));
+  if (q.sale === 'true') list = list.filter((p) => p.compareAtPrice > p.price);
   if (q.minPrice) list = list.filter((p) => p.price >= +q.minPrice);
   if (q.maxPrice) list = list.filter((p) => p.price <= +q.maxPrice);
-  const sizes = q.size?.split(',');
-  const colours = q.colour?.split(',');
+  const sizes = !skip.includes('size') && q.size?.split(',');
+  const colours = !skip.includes('colour') && q.colour?.split(',');
   if (sizes || colours || q.inStock === 'true') list = list.filter((p) => p.variants.some((v) => (!sizes || sizes.includes(v.size)) && (!colours || colours.includes(v.colour)) && (q.inStock !== 'true' || v.stock > 0)));
   const attr = q.attr || Object.fromEntries(Object.entries(q).filter(([k]) => k.startsWith('attr[')).map(([k, v]) => [k.slice(5, -1), v]));
   for (const [k, v] of Object.entries(attr || {})) if (ATTR_FILTERS.includes(k)) list = list.filter((p) => String(v).split(',').includes(p.attributes?.[k]));
+  return list;
+}
+
+function search(list, text) {
+  const terms = parseQuery(text);
+  if (!terms.length) return null;
+  return list
+    .map((p) => ({ p, score: scoreProduct(searchFields(p, catNames(p.category)), terms) }))
+    .filter((x) => x.score > 0)
+    .sort((a, b) => b.score - a.score || b.p.soldCount - a.p.soldCount)
+    .map((x) => x.p);
+}
+
+const SIZE_ORDER = ['XS', 'S', 'M', 'L', 'XL', 'XXL', 'XXXL'];
+const sortSizes = (sizes) =>
+  [...sizes].sort((a, b) => {
+    const [ia, ib] = [SIZE_ORDER.indexOf(a), SIZE_ORDER.indexOf(b)];
+    if (ia >= 0 || ib >= 0) return (ia < 0 ? 99 : ia) - (ib < 0 ? 99 : ib);
+    const [na, nb] = [parseFloat(a), parseFloat(b)];
+    return Number.isNaN(na) || Number.isNaN(nb) ? String(a).localeCompare(b) : na - nb;
+  });
+
+function facets(q) {
+  const base = filterProducts({ category: q.category, tag: q.tag, sale: q.sale });
+  const ps = (q.q && search(base, q.q)) || base;
+  const count = (vals) => Object.entries(vals.reduce((m, v) => (v ? ((m[v] = (m[v] || 0) + 1), m) : m), {})).map(([value, n]) => ({ value, count: n }));
+  const sizes = count(ps.flatMap((p) => [...new Set(p.variants.map((v) => v.size))]));
+  return {
+    total: ps.length,
+    sizes: sortSizes(sizes.map((s) => s.value)).map((v) => sizes.find((s) => s.value === v)),
+    colours: count(ps.flatMap((p) => [...new Set(p.variants.map((v) => v.colour))])).sort((a, b) => b.count - a.count),
+    attributes: Object.fromEntries(ATTR_FILTERS.map((k) => [k, count(ps.map((p) => p.attributes?.[k])).sort((a, b) => b.count - a.count)]).filter(([, v]) => v.length > 1)),
+    price: { min: ps.length ? Math.min(...ps.map((p) => p.price)) : 0, max: ps.length ? Math.max(...ps.map((p) => p.price)) : 0 },
+  };
+}
+
+function listProducts(q) {
+  let list = filterProducts(q);
+  const hits = q.q && String(q.q).trim() ? search(list, q.q) : null;
+  if (hits) list = hits;
   if (q.featured === 'true') list = list.filter((p) => p.isFeatured);
   if (q.ids) {
     const ids = q.ids.split(',');
     list = list.filter((p) => ids.includes(p._id)).sort((a, b) => ids.indexOf(a._id) - ids.indexOf(b._id));
   }
   const sorters = { newest: (a, b) => b.createdAt.localeCompare(a.createdAt), priceAsc: (a, b) => a.price - b.price, priceDesc: (a, b) => b.price - a.price, popular: (a, b) => b.soldCount - a.soldCount, rating: (a, b) => b.rating - a.rating };
-  if (!q.ids) list = [...list].sort(sorters[q.sort] || sorters.newest);
+  // Search results keep their relevance order unless the shopper picks a sort.
+  if (!q.ids && !(hits && !sorters[q.sort])) list = [...list].sort(sorters[q.sort] || sorters.newest);
   const limit = Math.min(Math.max(+q.limit || 12, 1), 48);
   const page = Math.max(+q.page || 1, 1);
   return { products: list.slice((page - 1) * limit, page * limit).map(withCat), meta: { total: list.length, page, pages: Math.ceil(list.length / limit), limit } };
@@ -400,6 +444,7 @@ const routes = [
   /* ---- catalogue ---- */
   ['get', /^\/categories$/, () => ({ categories: db.categories.filter((c) => c.isActive).sort((a, b) => a.sortOrder - b.sortOrder) })],
   ['get', /^\/products$/, ({ params }) => listProducts(params)],
+  ['get', /^\/products\/facets$/, ({ params }) => ({ facets: facets(params) })],
   ['get', /^\/products\/([^/]+)\/reviews$/, ({ m }) => {
     const reviews = db.reviews.filter((r) => r.product === m[1] && r.status === 'Approved').map((r) => ({ ...r, user: { name: db.users.find((u) => u._id === r.user)?.name || 'Customer' } }));
     const avg = reviews.length ? Math.round((reviews.reduce((s, r) => s + r.rating, 0) / reviews.length) * 10) / 10 : 0;

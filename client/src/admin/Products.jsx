@@ -93,7 +93,7 @@ export default function Products() {
 
 /* ======================= Product editor ======================= */
 const blank = { title: '', titleUr: '', description: '', descriptionUr: '', category: '', price: '', compareAtPrice: '', images: [], attributes: {}, variants: [], tags: [], sizeGuide: '', slug: '', seo: { metaTitle: '', metaDescription: '' }, isActive: true, isFeatured: false };
-const PRESET_SIZES = { Women: 'XS, S, M, L, XL', Men: 'S, M, L, XL', Kids: '2Y, 4Y, 6Y, 8Y, 10Y', Footwear: '36, 37, 38, 39, 40', Fabric: '1 metre', 'One size': 'One Size' };
+const PRESET_SIZES = { Tops: 'S, M, L, XL, XXL', 'Waist (jeans/trousers)': '30, 32, 34, 36, 38', 'Suit chest': '38, 40, 42, 44', Shoes: '40, 41, 42, 43, 44', 'One size': 'One Size' };
 const skuFor = (slug, colour, size) => `${(slug || 'FN').toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6) || 'FN'}-${String(colour || 'X').slice(0, 3).toUpperCase()}-${String(size || 'OS').replace(/\s+/g, '').toUpperCase()}`;
 
 export function ProductEditor() {
@@ -256,12 +256,12 @@ export function ProductEditor() {
 
           {tab === 'attributes' && (
             <Card title="Attributes — any name / value" action={<button onClick={() => setAttrs([...attrs, ['', '']])} className="text-xs underline">+ Add attribute</button>}>
-              <p className="mb-4 text-xs text-stone">Examples: fabric = Lawn · pieces = 3 Piece · dupatta = Chiffon · soldBy = metre. Filterable keys on the store: fabric, pieces, dupatta, soldBy, fit, work, material, age.</p>
+              <p className="mb-4 text-xs text-stone">Examples: fabric = Cotton · fit = Slim · sleeve = Full · occasion = Formal · material = Leather. Filterable keys on the store: fabric, fit, sleeve, occasion, material. Add the tag “new” to show a product in New Arrivals.</p>
               <div className="space-y-2">
                 {attrs.map(([k, v], i) => (
                   <div key={i} className="grid grid-cols-[1fr_1fr_auto] gap-2">
                     <input className="input bg-white" placeholder="name (e.g. fabric)" aria-label="Attribute name" value={k} onChange={(e) => setAttrs(attrs.map((a, n) => (n === i ? [e.target.value.replace(/[^a-zA-Z0-9]/g, ''), a[1]] : a)))} />
-                    <input className="input bg-white" placeholder="value (e.g. Lawn)" aria-label="Attribute value" value={v} onChange={(e) => setAttrs(attrs.map((a, n) => (n === i ? [a[0], e.target.value] : a)))} />
+                    <input className="input bg-white" placeholder="value (e.g. Cotton)" aria-label="Attribute value" value={v} onChange={(e) => setAttrs(attrs.map((a, n) => (n === i ? [a[0], e.target.value] : a)))} />
                     <button onClick={() => setAttrs(attrs.filter((_, n) => n !== i))} aria-label="Remove attribute" className="px-2 text-stone hover:text-rose"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 ))}
@@ -334,9 +334,9 @@ export function ProductEditor() {
 
 /* ======================= Bulk CSV import ======================= */
 const TEMPLATE = `title,titleUr,category,price,compareAtPrice,sku,size,colour,stock,images,description,tags,attributes
-Laila Lawn Kurta,لیلیٰ لان کرتا,lawn,5490,6490,LAILA-IVO-S,S,Ivory,10,https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=900,Printed lawn kurta,new|lawn,fabric=Lawn;pieces=1 Piece
-Laila Lawn Kurta,,lawn,5490,6490,LAILA-IVO-M,M,Ivory,8,,,,
-Raw Silk Metre,,unstitched,2490,,RSM-GOL-1M,1 metre,Gold,40,,Pure raw silk,unstitched,fabric=Raw Silk;soldBy=metre
+Crew Neck Cotton Tee,کریو نیک کاٹن ٹی شرٹ,t-shirts,1490,1990,CREW-BLK-M,M,Black,20,https://images.unsplash.com/photo-1583743814966-8936f5b7be1a?w=900,Soft cotton everyday tee,new|basics,fabric=Cotton;fit=Regular;sleeve=Short
+Crew Neck Cotton Tee,,t-shirts,1490,1990,CREW-BLK-L,L,Black,15,,,,
+Slim Stretch Jeans,,jeans,4490,,SSJ-IND-32,32,Indigo,12,https://images.unsplash.com/photo-1542272604-787c3835535d?w=900,Stretch denim jeans,denim,fabric=Stretch Denim;fit=Slim
 `;
 
 export function BulkImport() {

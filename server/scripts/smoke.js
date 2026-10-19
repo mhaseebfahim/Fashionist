@@ -28,14 +28,16 @@ const login = async (email, password) => (await api().post('/api/auth/login').se
 try {
   // ---- storefront ----
   const cms = (await api().get('/api/cms')).body.data;
-  check('CMS bundle', cms.sections.length === 10 && cms.navigation.header.length === 5 && cms.announcement.messages.length === 3, `${cms.sections.length} sections`);
-  const prods = await api().get('/api/products').query({ category: 'women', sort: 'priceAsc', limit: 48 });
-  check('Women subtree (lawn+formal+bridal+women)', prods.body.meta.total === 16, `${prods.body.meta.total} products`);
+  check('CMS bundle', cms.sections.length === 11 && cms.navigation.header.length === 7 && cms.announcement.messages.length === 3, `${cms.sections.length} sections`);
+  const prods = await api().get('/api/products').query({ category: 'bottomwear', sort: 'priceAsc', limit: 48 });
+  check('Bottomwear subtree (jeans+trousers+shorts)', prods.body.meta.total === 15, `${prods.body.meta.total} products`);
   const p = prods.body.data.products;
   check('priceAsc sort', p.every((x, i) => !i || p[i - 1].price <= x.price));
-  check('$text search', (await api().get('/api/products').query({ q: 'lawn' })).body.meta.total > 0);
-  check('attr filter soldBy=metre', (await api().get('/api/products').query({ 'attr[soldBy]': 'metre' })).body.meta.total === 4);
-  check('size/colour filter', (await api().get('/api/products').query({ size: 'XL', colour: 'Ink' })).body.meta.total > 0);
+  for (const q of ['jeans', 'pent', 'shert', 'tshirt', 'leather jacket', 'shir']) check(`search "${q}"`, (await api().get('/api/products').query({ q })).body.meta.total > 0);
+  check('attr filter fit=Slim', (await api().get('/api/products').query({ 'attr[fit]': 'Slim' })).body.meta.total > 0);
+  check('size/colour filter', (await api().get('/api/products').query({ size: 'L', colour: 'Black' })).body.meta.total > 0);
+  check('new arrivals + sale', (await api().get('/api/products').query({ tag: 'new' })).body.meta.total > 0 && (await api().get('/api/products').query({ sale: 'true' })).body.data.products.every((x) => x.compareAtPrice > x.price));
+  check('facets', (await api().get('/api/products/facets').query({ category: 'jeans' })).body.data.facets.sizes.length === 5);
   const slug = p[0].slug;
   const detail = (await api().get(`/api/products/${slug}`)).body.data;
   check('product detail', detail.product.slug === slug && Array.isArray(detail.related));
@@ -79,7 +81,7 @@ try {
   const dash = (await api().get('/api/admin/dashboard').set(A)).body.data;
   check('dashboard', dash.kpis && dash.recentOrders.length > 0 && Array.isArray(dash.daily), `revenue ${dash.kpis?.revenue}`);
   check('notifications', (await api().get('/api/admin/notifications').set(A)).body.data.items.length > 0);
-  check('global search', (await api().get('/api/admin/search').query({ q: 'noor' }).set(A)).body.data.products.length > 0);
+  check('global search', (await api().get('/api/admin/search').query({ q: 'oxford' }).set(A)).body.data.products.length > 0);
   for (const s of ['Confirmed']) check(`status → ${s}`, (await api().patch(`/api/admin/orders/${oid}/status`).set(A).send({ status: s })).status === 200);
   check('ship needs tracking', (await api().patch(`/api/admin/orders/${oid}/status`).set(A).send({ status: 'Shipped' })).status === 400);
   check('ship', (await api().patch(`/api/admin/orders/${oid}/status`).set(A).send({ status: 'Shipped', courier: 'TCS', trackingNumber: 'TCS1' })).status === 200);
@@ -94,11 +96,11 @@ try {
   check('returns list', rets.length >= 1);
   check('approve return', (await api().patch(`/api/admin/returns/${rets[0]._id}`).set(A).send({ decision: 'Approved', note: 'ok' })).body.data?.order.status === 'Returned');
   const cats = (await api().get('/api/admin/categories').set(A)).body.data.categories;
-  check('12 categories', cats.length === 12);
-  const newP = await api().post('/api/admin/products').set(A).send({ title: 'Smoke Test Kurta', category: cats[0]._id, price: 3990, images: ['https://example.com/a.jpg'], attributes: { fabric: 'Lawn', newThing: 'yes' }, variants: [{ sku: 'SMOKE-1', size: 'M', colour: 'Ink', stock: 3 }], seo: { metaTitle: 'Smoke' } });
+  check('23 categories', cats.length === 23);
+  const newP = await api().post('/api/admin/products').set(A).send({ title: 'Smoke Test Tee', category: cats[0]._id, price: 3990, images: ['https://example.com/a.jpg'], attributes: { fabric: 'Cotton', newThing: 'yes' }, variants: [{ sku: 'SMOKE-1', size: 'M', colour: 'Ink', stock: 3 }], seo: { metaTitle: 'Smoke' } });
   check('create product', newP.status === 201, newP.body.message);
   check('bulk hide', (await api().post('/api/admin/products/bulk').set(A).send({ ids: [newP.body.data.product._id], action: 'hide' })).body.data.modified === 1);
-  const csv = 'title,category,price,sku,size,colour,stock\nCSV Shirt,men,2990,CSV-1,M,Ink,5\nBad Row,nowhere,0,,,,x\n';
+  const csv = 'title,category,price,sku,size,colour,stock\nCSV Shirt,t-shirts,2990,CSV-1,M,Black,5\nBad Row,nowhere,0,,,,x\n';
   const prev = (await api().post('/api/admin/bulk-import/preview').set(A).send({ csv })).body.data;
   check('import preview', prev.valid === 1 && prev.invalid === 1);
   check('import', (await api().post('/api/admin/bulk-import').set(A).send({ csv })).body.data.created === 1);

@@ -52,4 +52,4 @@ export function couponError(c, userId, subtotal) {
 
 export const PHONE_RE = /^03\d{9}$/;
 export const CITIES = ['Karachi', 'Lahore', 'Islamabad', 'Rawalpindi', 'Faisalabad', 'Multan', 'Peshawar', 'Quetta', 'Sialkot', 'Gujranwala', 'Hyderabad', 'Bahawalpur', 'Sargodha', 'Sukkur', 'Abbottabad', 'Mardan', 'Sahiwal', 'Rahim Yar Khan', 'Dera Ghazi Khan', 'Gujrat'];
-export const ATTR_FILTERS = ['fabric', 'pieces', 'dupatta', 'soldBy', 'fit', 'work', 'material', 'age'];
+export const ATTR_FILTERS = ['fabric', 'fit', 'sleeve', 'occasion', 'material'];

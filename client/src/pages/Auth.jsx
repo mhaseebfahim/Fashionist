@@ -140,7 +140,7 @@ export function Login() {
     }
   };
   return (
-    <Shell title={t('auth.welcome')} image={IMG.w2}>
+    <Shell title={t('auth.welcome')} image={IMG.suitMan}>
       <form onSubmit={submit} className="space-y-5" noValidate>
         <Field label={t('auth.email')} error={f.err('email')}><input type="email" inputMode="email" autoComplete="email" className="input" {...f.bind('email')} /></Field>
         <PasswordInput label={t('auth.password')} error={f.err('password')} {...f.bind('password')} />
@@ -191,7 +191,7 @@ export function Register() {
     }
   };
   return (
-    <Shell title={t('auth.join')} image={IMG.m1}>
+    <Shell title={t('auth.join')} image={IMG.leatherMan}>
       <form onSubmit={submit} className="space-y-5" noValidate>
         <Field label={t('auth.name')} error={f.err('name')}><input className="input" autoComplete="name" {...f.bind('name')} /></Field>
         <Field label={t('auth.email')} error={f.err('email')} hint={t('auth.domainOnly', { domains: domainText })}><input type="email" inputMode="email" className="input" autoComplete="email" placeholder={`you${'@' + domains[0]}`} {...f.bind('email')} /></Field>
@@ -259,9 +259,9 @@ export function VerifyEmail() {
       toast.error(err.message);
     }
   };
-  if (!email) return <Shell title={t('auth.verifyTitle')} image={IMG.w3}><Link to="/register" className="underline">{t('auth.register')}</Link></Shell>;
+  if (!email) return <Shell title={t('auth.verifyTitle')} image={IMG.crew}><Link to="/register" className="underline">{t('auth.register')}</Link></Shell>;
   return (
-    <Shell title={t('auth.verifyTitle')} image={IMG.w3}>
+    <Shell title={t('auth.verifyTitle')} image={IMG.crew}>
       <p className="text-sm text-muted">{t('auth.verifySub', { email })}</p>
       <form onSubmit={submit} className="mt-8">
         <div className="flex justify-between gap-2" dir="ltr">
@@ -307,7 +307,7 @@ export function ForgotPassword() {
     }
   };
   return (
-    <Shell title={t('auth.reset')} image={IMG.w3}>
+    <Shell title={t('auth.reset')} image={IMG.crew}>
       {sent ? (
         <div className="space-y-4 text-sm">
           <p>{sent.message}</p>
@@ -347,7 +347,7 @@ export function ResetPassword() {
     }
   };
   return (
-    <Shell title={t('auth.reset')} image={IMG.w3}>
+    <Shell title={t('auth.reset')} image={IMG.crew}>
       <form onSubmit={submit} className="space-y-5" noValidate>
         <PasswordInput label={t('auth.newPassword')} error={f.err('password')} autoComplete="new-password" {...f.bind('password')} />
         <Button type="submit" loading={loading} className="w-full">{t('auth.reset')}</Button>

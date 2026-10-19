@@ -105,8 +105,9 @@ export default function Header() {
               <div className="col-span-2">
                 <p className="label mb-5 text-gold">{t('nav.newIn')}</p>
                 <ul className="space-y-3 text-sm">
-                  <li><Link className="link-grow" to="/search?q=eid">The Eid Edit</Link></li>
-                  <li><Link className="link-grow" to="/shop?sort=newest">Just landed</Link></li>
+                  <li><Link className="link-grow" to="/shop?tag=new">New arrivals</Link></li>
+                  <li><Link className="link-grow" to="/shop?sale=true">On sale</Link></li>
+                  
                   <li><Link className="link-grow" to="/shop?sort=popular">Most loved</Link></li>
                 </ul>
               </div>

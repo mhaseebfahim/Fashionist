@@ -54,7 +54,8 @@ export async function seed({ reset = false, log = console.log } = {}) {
   }
   if (!(await Product.countDocuments())) {
     const cats = Object.fromEntries((await Category.find()).map((c) => [c.slug, c._id]));
-    const products = await Product.insertMany(data.products.map((p) => ({ ...p, category: cats[p.category] })));
+    // Staggered dates so 'newest' lists the catalogue in its intended order.
+    const products = await Product.insertMany(data.products.map((p, i) => ({ ...p, category: cats[p.category], createdAt: new Date(Date.now() - i * 3600000) })));
     log(`Products: ${products.length}`);
   }
   if (!(await Order.countDocuments())) {
@@ -87,7 +88,8 @@ export async function seed({ reset = false, log = console.log } = {}) {
     );
     log(`Homepage sections: ${cmsDefaults.sections.length}`);
   }
-  log(`Done. Admin: ${ADMIN_EMAIL} · customers: ${data.customers.map((c) => c.email).join(', ')} (password ${data.CUSTOMER_PASSWORD})`);
+  // Never print the admin password — it lives in server/.env.
+  log(`Done. Admin: ${ADMIN_EMAIL} (password = ADMIN_PASSWORD in server/.env) · customers: ${data.customers.map((c) => c.email).join(', ')} (password ${data.CUSTOMER_PASSWORD})`);
 }
 
 // Run directly: node scripts/seed.js [--reset]

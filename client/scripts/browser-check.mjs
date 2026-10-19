@@ -48,12 +48,16 @@ const login = async (email, password) => {
 
 try {
   // ---- storefront (guest) ----
-  await visit('/', 'Eid Edit');
+  await visit('/', 'Built for Every Day');
   await visit('/shop', 'pieces');
-  await visit('/shop/women', 'Women');
-  await visit('/shop/lawn?size=M&fabric=Lawn', 'Lawn');
-  await visit('/search?q=silk', 'silk');
-  await visit('/product/noor-embroidered-lawn-kurta', 'Noor Embroidered');
+  await visit('/shop/topwear', 'Topwear');
+  await visit('/shop/jeans?size=32&fit=Slim', 'Slim Fit Stretch Jeans');
+  await visit('/shop?tag=new', 'New Arrivals');
+  await visit('/shop?sale=true', 'Sale');
+  await visit('/search?q=pent', 'Chinos');
+  await visit('/search?q=jens', 'Jeans');
+  await visit('/search?q=leather%20jacket', 'Biker Leather Jacket');
+  await visit('/product/essential-crew-neck-tee', 'Essential Crew Neck Tee');
   await visit('/cart', 'bag');
   await visit('/pages/about', 'Our Story');
   await visit('/pages/faq', 'Cash on Delivery');
@@ -86,7 +90,7 @@ try {
   await visit('/account/orders', 'FN-');
   await visit('/account/addresses', 'Lahore');
   await visit('/account/wishlist');
-  await visit('/product/zara-silk-three-piece', 'Zara Silk');
+  await visit('/product/classic-bomber-jacket', 'Classic Bomber Jacket');
   const sizeBtn = await page.$$('button[aria-pressed="false"].min-w-12:not([disabled])');
   if (sizeBtn[0]) await sizeBtn[0].click();
   const addBtn = await page.$$('button.btn-primary');
@@ -137,7 +141,7 @@ try {
   if (!palette) problems.push('[flow] command palette');
   // mobile layout of home
   await page.setViewport({ width: 360, height: 780 });
-  await visit('/', 'Eid Edit');
+  await visit('/', 'Built for Every Day');
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
   console.log(`${overflow <= 1 ? '✓' : '✗'} no horizontal scroll at 360px (${overflow}px)`);
   if (overflow > 1) problems.push(`[layout] horizontal overflow ${overflow}px at 360px`);

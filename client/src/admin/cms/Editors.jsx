@@ -96,8 +96,8 @@ export function ThemeEditor() {
             <p className="label mt-8 text-gold">Eid 2026</p>
             <h2 className="mt-2 font-display text-6xl font-semibold leading-none">The Eid Edit</h2>
             <div className="my-5 h-px w-16 bg-gold" />
-            <p className="max-w-sm text-sm text-stone">Hand-embroidered lawn, organza and silk — made for the moments you will retell for years.</p>
-            <div className="mt-6 flex flex-wrap gap-3"><span className="btn-primary">Shop Women</span><span className="btn-outline">Shop Men</span></div>
+            <p className="max-w-sm text-sm text-stone">Tees, shirts and denim cut for Pakistani summers and city winters — paid at your door.</p>
+            <div className="mt-6 flex flex-wrap gap-3"><span className="btn-primary">Shop New Arrivals</span><span className="btn-outline">Shop Topwear</span></div>
             <p className="mt-6 text-sm">PKR 6,490 <span className="ms-2 font-semibold text-rose">PKR 5,190</span> <span className="label ms-2 bg-blush px-2 py-1 text-[10px] text-rose-deep">-20%</span></p>
           </div>
         </div>
@@ -107,7 +107,7 @@ export function ThemeEditor() {
 }
 
 /* ======================= Navigation ======================= */
-const linkFields = [{ key: 'label', label: 'Label', type: 'bi' }, { key: 'link', label: 'Link', placeholder: '/shop/lawn' }];
+const linkFields = [{ key: 'label', label: 'Label', type: 'bi' }, { key: 'link', label: 'Link', placeholder: '/shop/jeans' }];
 const NAV_SCHEMA = [
   { key: 'header', label: 'Header menu', type: 'list', itemName: 'menu item', max: 8, itemLabel: (i) => i.label, newItem: { label: 'New', link: '/shop', children: [] }, fields: [...linkFields, { key: 'image', label: 'Mega-menu image', type: 'image' }, { key: 'children', label: 'Sub-links', type: 'list', itemName: 'link', itemLabel: (c) => c.label, newItem: { label: 'Link', link: '/shop' }, fields: linkFields }] },
   { key: 'footer', label: 'Footer columns', type: 'list', itemName: 'column', max: 4, itemLabel: (c) => c.title, newItem: { title: 'Column', links: [] }, fields: [{ key: 'title', label: 'Column title', type: 'bi' }, { key: 'links', label: 'Links', type: 'list', itemName: 'link', itemLabel: (c) => c.label, newItem: { label: 'Link', link: '/' }, fields: linkFields }] },
