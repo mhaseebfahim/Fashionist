@@ -149,7 +149,7 @@ export function Login() {
       </form>
       <GoogleButton clientId={cfg.googleClientId} onDone={done} />
       <p className="mt-8 text-sm text-muted">{t('auth.noAccount')} <Link to="/register" className="text-fg underline">{t('auth.register')}</Link></p>
-      <p className="mt-6 border-t border-line pt-4 text-xs text-muted">{t('auth.demo')}</p>
+      <p className="mt-6 border-t border-line pt-4 text-xs text-muted">{t('')}</p>
     </Shell>
   );
 }
