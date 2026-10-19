@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
-import { Banknote, Check } from 'lucide-react';
+import { Banknote, Check, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { CartLines, FreeShippingBar } from '../components/CartDrawer.jsx';
 import { Button, EmptyState, Field, Img, Spinner, StatusTracker, useMeta } from '../components/ui.jsx';
@@ -11,11 +11,11 @@ import { useAsync, useSettings } from '../hooks/index.js';
 import { orderService } from '../services/index.js';
 import { clearCart } from '../features/store.js';
 import { pkr } from '../utils/format.js';
-import { CITIES, PHONE_RE, shippingFeeFor } from '../utils/rules.js';
+import { CITIES, PHONE_RE, deliveryFeeFor, hourLabel, sameDayFor, shippingFeeFor } from '../utils/rules.js';
 
 const COUPON_KEY = 'fashionist:coupon';
 
-function CouponField({ subtotal, city, value, onChange }) {
+function CouponField({ subtotal, city, deliveryMethod, value, onChange }) {
   const { t } = useTranslation();
   const user = useSelector((s) => s.auth.user);
   const [code, setCode] = useState(value?.code || '');
@@ -24,7 +24,7 @@ function CouponField({ subtotal, city, value, onChange }) {
     if (!user) return toast.error(t('checkout.loginFirst'));
     setLoading(true);
     try {
-      const r = await orderService.validateCoupon({ code, subtotal, city });
+      const r = await orderService.validateCoupon({ code, subtotal, city, deliveryMethod });
       onChange(r);
       toast.success(`${r.code} applied`);
     } catch (e) {
@@ -121,7 +121,13 @@ export function Checkout() {
   const address = selected === 'new' ? form : saved.find((a) => a._id === selected);
   const subtotal = items.reduce((s, i) => s + i.price * i.qty, 0);
   const discount = coupon?.discount || 0;
-  const shipping = coupon?.freeShipping ? 0 : settings ? shippingFeeFor(address?.city, settings, subtotal - discount) : null;
+  const sameDay = sameDayFor(address?.city, settings);
+  // Customers in the same-day city get it picked automatically; they can still switch to standard.
+  const [method, setMethod] = useState('standard');
+  useEffect(() => setMethod(sameDay.available ? 'same_day' : 'standard'), [sameDay.available]);
+  const deliveryMethod = sameDay.available ? method : 'standard';
+  const shipping = coupon?.freeShipping ? 0 : settings ? deliveryFeeFor(address?.city, settings, subtotal - discount, deliveryMethod) : null;
+  const cutoff = hourLabel(settings?.sameDay?.cutoffHour);
 
   if (!items.length) return <EmptyState title={t('cart.empty')} action={<Link to="/shop" className="btn-ink">{t('cart.continue')}</Link>} />;
 
@@ -140,7 +146,7 @@ export function Checkout() {
     setPlacing(true);
     try {
       const { name, phone, city, area, street } = address;
-      const { order } = await orderService.create({ items: items.map(({ productId, sku, qty }) => ({ product: productId, sku, qty })), shippingAddress: { name, phone, city, area, street }, couponCode: coupon?.code });
+      const { order } = await orderService.create({ items: items.map(({ productId, sku, qty }) => ({ product: productId, sku, qty })), shippingAddress: { name, phone, city, area, street }, couponCode: coupon?.code, deliveryMethod });
       dispatch(clearCart());
       sessionStorage.removeItem(COUPON_KEY);
       nav(`/order/success/${order.orderNumber}`, { replace: true });
@@ -187,10 +193,28 @@ export function Checkout() {
             )}
           </Step>
           <Step n={2} title={t('checkout.delivery')}>
-            <div className="flex items-center justify-between border border-fg p-5 text-sm">
-              <span>{t('checkout.standard')} — {address?.city}</span>
-              <span className="font-semibold">{shipping === 0 ? t('cart.free') : pkr(shipping)}</span>
-            </div>
+            {sameDay.available ? (
+              <div className="space-y-3" role="radiogroup" aria-label={t('checkout.delivery')}>
+                {[
+                  ['same_day', <><Zap className="h-4 w-4 text-gold" />{t('checkout.sameDay', { city: settings.sameDay.city })}</>, t(sameDay.eta === 'today' ? 'checkout.sameDayToday' : 'checkout.sameDayTomorrow', { time: cutoff }), deliveryFeeFor(address.city, settings, subtotal - discount, 'same_day')],
+                  ['standard', t('checkout.standard'), address.city, shippingFeeFor(address.city, settings, subtotal - discount)],
+                ].map(([k, title, sub, fee]) => (
+                  <button key={k} type="button" role="radio" aria-checked={method === k} onClick={() => setMethod(k)} className={`flex w-full items-start gap-4 border p-5 text-start text-sm ${method === k ? 'border-fg bg-surface' : 'border-line'}`}>
+                    <span className={`mt-0.5 grid h-5 w-5 shrink-0 place-items-center rounded-full border ${method === k ? 'border-fg bg-fg text-bg' : 'border-line'}`}>{method === k && <Check className="h-3 w-3" />}</span>
+                    <span className="flex-1"><span className="flex items-center gap-2 font-semibold">{title}</span><span className="mt-1 block text-muted">{sub}</span></span>
+                    <span className="font-semibold">{coupon?.freeShipping || fee === 0 ? t('cart.free') : pkr(fee)}</span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center justify-between border border-fg p-5 text-sm">
+                  <span>{t('checkout.standard')} — {address?.city}</span>
+                  <span className="font-semibold">{shipping === 0 ? t('cart.free') : pkr(shipping)}</span>
+                </div>
+                {settings?.sameDay?.enabled && <p className="mt-2 flex items-center gap-2 text-xs text-muted"><Zap className="h-3.5 w-3.5 text-gold" />{t('checkout.sameDayHint', { city: settings.sameDay.city })}</p>}
+              </>
+            )}
             <div className="mt-4 flex items-start gap-4 border border-fg bg-surface p-5" role="radio" aria-checked="true">
               <span className="mt-0.5 grid h-5 w-5 place-items-center rounded-full bg-fg text-bg"><Check className="h-3 w-3" /></span>
               <div>
@@ -215,7 +239,7 @@ export function Checkout() {
         <aside className="lg:col-span-5">
           <div className="sticky top-28 space-y-6 bg-surface p-6 lg:p-8">
             <h2 className="text-2xl">{t('cart.summary')}</h2>
-            <CouponField subtotal={subtotal} city={address?.city} value={coupon} onChange={setCoupon} />
+            <CouponField subtotal={subtotal} city={address?.city} deliveryMethod={deliveryMethod} value={coupon} onChange={setCoupon} />
             <Summary subtotal={subtotal} discount={discount} shipping={shipping} />
           </div>
         </aside>

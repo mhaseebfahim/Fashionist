@@ -2,7 +2,7 @@
 // envelope ({ success, data, meta }) and business rules; state persists in localStorage.
 import * as seed from './seedData.js';
 import { cmsDefaults } from '../../cms/defaults.js';
-import { ATTR_FILTERS, ORDER_STATUSES, canTransition, couponDiscount, couponError, isWithinReturnWindow, MAX_QTY, shippingFeeFor } from '../../utils/rules.js';
+import { ATTR_FILTERS, ORDER_STATUSES, canTransition, couponDiscount, couponError, deliveryFeeFor, isWithinReturnWindow, MAX_QTY, PHONE_RE, sameDayFor } from '../../utils/rules.js';
 
 const KEY = 'fashionist:mockdb:v4';
 const ENV = (typeof import.meta !== 'undefined' && import.meta.env) || {};
@@ -65,6 +65,7 @@ const load = () => {
   } catch {
     db = fresh();
   }
+  db.settings.sameDay ||= clone(seed.settings.sameDay); // demo data saved before same-day existed
   return db;
 };
 const save = () => {
@@ -136,7 +137,12 @@ const subtree = (slug) => {
 
 function changeStatus(order, to, extra = {}) {
   if (!canTransition(order.status, to)) fail(400, `Cannot move order from ${order.status} to ${to}`);
-  if (to === 'Shipped') {
+  if (to === 'Shipped' && order.deliveryMethod === 'same_day') {
+    const r = extra.rider;
+    if (!r?.name || !PHONE_RE.test(r?.phone || '')) fail(400, 'Choose a rider to send this same-day order');
+    order.rider = { name: r.name, phone: r.phone, vehicle: r.vehicle || 'Bike' };
+    Object.assign(order, { courier: `${order.rider.vehicle} rider · ${r.name}`, trackingNumber: r.phone });
+  } else if (to === 'Shipped') {
     if (!extra.courier || !extra.trackingNumber) fail(400, 'Courier and tracking number are required to ship');
     Object.assign(order, { courier: extra.courier, trackingNumber: extra.trackingNumber });
   }
@@ -414,8 +420,8 @@ const routes = [
     return { product: withCat(p), related: db.products.filter((x) => x.category === p.category && x._id !== p._id && x.isActive).slice(0, 8).map(withCat) };
   }],
   ['get', /^\/settings\/public$/, () => {
-    const { store, shippingRates, defaultShippingFee, freeShippingAbove, returnWindowDays } = db.settings;
-    return { settings: { store, shippingRates, defaultShippingFee, freeShippingAbove, returnWindowDays } };
+    const { store, shippingRates, defaultShippingFee, freeShippingAbove, returnWindowDays, sameDay: { enabled, city, fee, cutoffHour } = {} } = db.settings;
+    return { settings: { store, shippingRates, defaultShippingFee, freeShippingAbove, returnWindowDays, sameDay: { enabled: !!enabled, city, fee, cutoffHour } } };
   }],
   ['get', /^\/cms$/, () => cmsBundle(false)],
   ['get', /^\/cms\/pages\/([^/]+)$/, ({ m }) => ({ page: db.cms.pages.find((p) => p.slug === m[1] && p.isPublished) || fail(404, 'Page not found') })],
@@ -460,7 +466,10 @@ const routes = [
       if (err) fail(400, err);
     }
     const discount = couponDiscount(coupon, subtotal);
-    const shippingFee = coupon?.type === 'freeship' ? 0 : shippingFeeFor(body.shippingAddress.city, db.settings, subtotal - discount);
+    const method = body.deliveryMethod === 'same_day' ? 'same_day' : 'standard';
+    const sameDay = sameDayFor(body.shippingAddress.city, db.settings);
+    if (method === 'same_day' && !sameDay.available) fail(400, db.settings.sameDay?.enabled ? `Same-day delivery is only available in ${db.settings.sameDay.city}` : 'Same-day delivery is currently unavailable');
+    const shippingFee = coupon?.type === 'freeship' ? 0 : deliveryFeeFor(body.shippingAddress.city, db.settings, subtotal - discount, method);
     lines.forEach(({ p, v, line }) => ((v.stock -= line.qty), (p.soldCount += line.qty)));
     if (coupon) coupon.usedCount++, coupon.usedBy.push(u._id);
     const { name, phone, city, area, street } = body.shippingAddress;
@@ -475,6 +484,8 @@ const routes = [
       coupon: coupon ? { code: coupon.code, amount: discount } : undefined,
       shippingFee,
       total: subtotal - discount + shippingFee,
+      deliveryMethod: method,
+      sameDayEta: method === 'same_day' ? sameDay.eta : undefined,
       paymentMethod: 'COD',
       paymentStatus: 'Unpaid',
       status: 'Pending',
@@ -493,7 +504,7 @@ const routes = [
     if (err) fail(400, err);
     const discount = couponDiscount(c, +body.subtotal);
     const freeShipping = c.type === 'freeship';
-    return { code: c.code, type: c.type, discount, freeShipping, shippingFee: freeShipping ? 0 : shippingFeeFor(body.city, db.settings, +body.subtotal - discount) };
+    return { code: c.code, type: c.type, discount, freeShipping, shippingFee: freeShipping ? 0 : deliveryFeeFor(body.city, db.settings, +body.subtotal - discount, sameDayFor(body.city, db.settings).available ? body.deliveryMethod : 'standard') };
   }],
   ['get', /^\/orders\/([^/]+)$/, ({ cfg, m }) => ({ order: findMyOrder(cfg, m[1]) })],
   ['post', /^\/orders\/([^/]+)\/cancel$/, ({ cfg, m }) => {
@@ -664,7 +675,7 @@ const routes = [
   }],
 
   /* ---- admin: orders & returns ---- */
-  ['get', /^\/admin\/orders\/export$/, ({ cfg, params }) => (requireAdmin(cfg), csv(['orderNumber', 'createdAt', 'status', 'paymentStatus', 'shippingAddress.name', 'shippingAddress.phone', 'shippingAddress.city', 'subtotal', 'discount', 'shippingFee', 'total'], filterOrders(params)))],
+  ['get', /^\/admin\/orders\/export$/, ({ cfg, params }) => (requireAdmin(cfg), csv(['orderNumber', 'createdAt', 'status', 'paymentStatus', 'shippingAddress.name', 'shippingAddress.phone', 'shippingAddress.city', 'deliveryMethod', 'subtotal', 'discount', 'shippingFee', 'total'], filterOrders(params)))],
   ['get', /^\/admin\/orders$/, ({ cfg, params }) => {
     requireAdmin(cfg);
     const all = filterOrders({ ...params, status: '' });
@@ -954,6 +965,7 @@ function filterOrders(q) {
   let list = [...db.orders].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   if (q.status) list = list.filter((o) => o.status === q.status);
   if (q.city) list = list.filter((o) => o.shippingAddress.city === q.city);
+  if (q.delivery) list = list.filter((o) => (o.deliveryMethod === 'same_day') === (q.delivery === 'same_day'));
   if (q.q) {
     const s = q.q.toLowerCase();
     list = list.filter((o) => [o.orderNumber, o.shippingAddress.phone, o.shippingAddress.name].some((x) => String(x).toLowerCase().includes(s)));

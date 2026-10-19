@@ -1,16 +1,60 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import toast from 'react-hot-toast';
-import { Check, Download, Printer } from 'lucide-react';
+import { Check, Download, MessageCircle, Phone, Printer, Zap } from 'lucide-react';
 import { Button, Diamond, Field, Img, Modal, Skeleton, Spinner, StatusTracker } from '../components/ui.jsx';
 import { useAsync, useDebounce } from '../hooks/index.js';
 import { adminService } from '../services/index.js';
 import { date, pkr } from '../utils/format.js';
-import { CITIES, ORDER_STATUSES, TRANSITIONS } from '../utils/rules.js';
+import { CITIES, ORDER_STATUSES, PHONE_RE, RIDER_VEHICLES, TRANSITIONS } from '../utils/rules.js';
 import { Badge, Card, Drawer, Empty, PageHead, Rows, Table, Tabs, downloadText } from './common.jsx';
 
 const COURIERS = ['TCS', 'Leopards', 'M&P', 'PostEx', 'Trax', 'Call Courier', 'BlueEx'];
 const ACTION_LABEL = { Confirmed: 'Confirm', Shipped: 'Ship', Delivered: 'Mark delivered', Cancelled: 'Cancel' };
+
+export const SameDayBadge = ({ order }) => (order.deliveryMethod === 'same_day' ? <span className="ms-2 inline-flex items-center gap-1 bg-gold/15 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink" title={`Same-day · ${order.sameDayEta || 'today'}`}><Zap className="h-3 w-3" />Same-day</span> : null);
+
+const waLink = (phone, text) => `https://wa.me/92${phone.replace(/^0/, '')}?text=${encodeURIComponent(text)}`;
+
+/** Same-day orders: pick one of the riders saved in Settings (or type a one-off), then send. */
+function RiderPicker({ order, busy, onSend }) {
+  const { data } = useAsync(() => adminService.settings(), []);
+  const riders = (data?.settings?.sameDay?.riders || []).filter((r) => r.isActive !== false);
+  const [pick, setPick] = useState('');
+  const [manual, setManual] = useState({ name: '', phone: '', vehicle: 'Bike' });
+  const chosen = pick === 'other' || !riders.length ? manual : riders.find((r) => (r._id || r.phone) === pick);
+  const valid = chosen && chosen.name?.trim().length >= 2 && PHONE_RE.test(chosen.phone || '');
+  const a = order.shippingAddress;
+  const brief = `Fashionist delivery ${order.orderNumber}\n${a.name} · ${a.phone}\n${a.street}, ${a.area}, ${a.city}\nCollect: ${pkr(order.paymentStatus === 'Paid' ? 0 : order.total)}`;
+  return (
+    <div className="space-y-4">
+      {riders.length > 0 && (
+        <div className="space-y-2" role="radiogroup" aria-label="Rider">
+          {[...riders, { _id: 'other', name: 'Someone else…' }].map((r) => {
+            const k = r._id || r.phone;
+            return (
+              <label key={k} className={`flex cursor-pointer items-center gap-3 border p-3 text-sm ${pick === k ? 'border-ink' : 'border-hairline'}`}>
+                <input type="radio" name="rider" className="accent-rose" checked={pick === k} onChange={() => setPick(k)} />
+                <span className="flex-1"><b>{r.name}</b>{r.phone && <span className="block font-mono text-xs text-stone">{r.vehicle} · {r.phone}</span>}</span>
+                {r.phone && <a href={`tel:${r.phone}`} onClick={(e) => e.stopPropagation()} className="text-stone hover:text-ink" aria-label={`Call ${r.name}`}><Phone className="h-4 w-4" /></a>}
+              </label>
+            );
+          })}
+        </div>
+      )}
+      {(pick === 'other' || !riders.length) && (
+        <div className="grid grid-cols-2 gap-3">
+          {!riders.length && <p className="col-span-2 text-xs text-stone">No riders saved yet — add them in <Link to="/admin/settings" className="underline">Settings → Same-day delivery</Link>, or enter one below.</p>}
+          <Field label="Name"><input className="input" value={manual.name} onChange={(e) => setManual({ ...manual, name: e.target.value })} /></Field>
+          <Field label="Mobile"><input className="input font-mono" inputMode="numeric" maxLength={11} placeholder="03XXXXXXXXX" value={manual.phone} onChange={(e) => setManual({ ...manual, phone: e.target.value.replace(/\D/g, '') })} /></Field>
+          <Field label="Vehicle"><select className="input" value={manual.vehicle} onChange={(e) => setManual({ ...manual, vehicle: e.target.value })}>{RIDER_VEHICLES.map((v) => <option key={v}>{v}</option>)}</select></Field>
+        </div>
+      )}
+      {valid && <a href={waLink(chosen.phone, brief)} target="_blank" rel="noreferrer" className="btn-outline w-full px-3 py-2.5"><MessageCircle className="h-4 w-4" /> Send address to rider on WhatsApp</a>}
+      <Button className="w-full" loading={busy} disabled={!valid} onClick={() => onSend({ rider: { name: chosen.name.trim(), phone: chosen.phone, vehicle: chosen.vehicle || 'Bike' } })}>Mark out for delivery</Button>
+    </div>
+  );
+}
 
 export function OrderPanel({ id, onChanged }) {
   const { data, loading, setData } = useAsync(() => adminService.order(id), [id]);
@@ -19,6 +63,7 @@ export function OrderPanel({ id, onChanged }) {
   const [busy, setBusy] = useState('');
   if (loading || !data) return <Skeleton className="h-96" />;
   const o = data.order;
+  const sameDay = o.deliveryMethod === 'same_day';
   const move = async (status, extra = {}) => {
     if (status === 'Cancelled' && !confirm('Cancel this order? Items go back into stock.')) return;
     setBusy(status);
@@ -39,22 +84,33 @@ export function OrderPanel({ id, onChanged }) {
     <div className="space-y-5">
       <div className="flex flex-wrap items-center gap-2">
         <Badge s={o.status} />
+        <SameDayBadge order={o} />
         <span className="text-xs text-stone">Placed {new Date(o.createdAt).toLocaleString()} · COD · {o.paymentStatus}</span>
         <span className="ms-auto flex gap-2">
           <Link to={`/admin/print/invoice/${o._id}`} target="_blank" className="btn-outline px-3 py-2"><Printer className="h-3.5 w-3.5" /> Invoice</Link>
           <Link to={`/admin/print/slip/${o._id}`} target="_blank" className="btn-outline px-3 py-2"><Printer className="h-3.5 w-3.5" /> Packing slip</Link>
         </span>
       </div>
+      {sameDay && ['Pending', 'Confirmed'].includes(o.status) && (
+        <p className="flex items-start gap-2 border border-gold/40 bg-gold/10 px-4 py-3 text-sm">
+          <Zap className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+          <span><b>Same-day delivery — {o.sameDayEta === 'tomorrow' ? 'promised for tomorrow morning' : 'promised for today'}.</b> Confirm it, then send it with a local rider.</span>
+        </p>
+      )}
       <Card>
         <StatusTracker order={o} />
         {next.length > 0 && (
           <div className="mt-6 flex flex-wrap gap-2 border-t border-hairline pt-5">
             {next.map((s) => (
-              <Button key={s} variant={s === 'Cancelled' ? 'outline' : 'primary'} loading={busy === s} className="px-4 py-2.5" onClick={() => (s === 'Shipped' ? setShip(true) : move(s))}>{ACTION_LABEL[s]}</Button>
+              <Button key={s} variant={s === 'Cancelled' ? 'outline' : 'primary'} loading={busy === s} className="px-4 py-2.5" onClick={() => (s === 'Shipped' ? setShip(true) : move(s))}>{s === 'Shipped' && sameDay ? 'Send with rider' : ACTION_LABEL[s]}</Button>
             ))}
           </div>
         )}
-        {o.trackingNumber && <p className="mt-4 text-sm">Courier <b>{o.courier}</b> · tracking <b className="font-mono">{o.trackingNumber}</b></p>}
+        {o.rider ? (
+          <p className="mt-4 flex flex-wrap items-center gap-x-3 text-sm">Rider <b>{o.rider.name}</b> ({o.rider.vehicle}) · <a href={`tel:${o.rider.phone}`} className="font-mono underline">{o.rider.phone}</a></p>
+        ) : (
+          o.trackingNumber && <p className="mt-4 text-sm">Courier <b>{o.courier}</b> · tracking <b className="font-mono">{o.trackingNumber}</b></p>
+        )}
       </Card>
       <Card title="Items" pad={false}>
         <ul className="divide-y divide-hairline">
@@ -69,7 +125,7 @@ export function OrderPanel({ id, onChanged }) {
         <dl className="space-y-1 border-t border-hairline px-5 py-4 text-sm">
           <div className="flex justify-between"><dt>Subtotal</dt><dd>{pkr(o.subtotal)}</dd></div>
           {o.discount > 0 && <div className="flex justify-between text-rose"><dt>Discount ({o.coupon?.code})</dt><dd>− {pkr(o.discount)}</dd></div>}
-          <div className="flex justify-between"><dt>Delivery</dt><dd>{o.shippingFee ? pkr(o.shippingFee) : 'Free'}</dd></div>
+          <div className="flex justify-between"><dt>Delivery{sameDay && ' (same-day)'}</dt><dd>{o.shippingFee ? pkr(o.shippingFee) : 'Free'}</dd></div>
           <div className="flex justify-between font-display text-xl"><dt>Collect on delivery</dt><dd>{pkr(o.paymentStatus === 'Paid' ? 0 : o.total)}</dd></div>
         </dl>
       </Card>
@@ -97,12 +153,12 @@ export function OrderPanel({ id, onChanged }) {
           ))}
         </ol>
       </Card>
-      <Modal open={ship} onClose={() => setShip(false)} title="Ship order">
-        <div className="space-y-4">
+      <Modal open={ship} onClose={() => setShip(false)} title={sameDay ? 'Send with a local rider' : 'Ship order'}>
+        {sameDay ? <RiderPicker order={o} busy={busy === 'Shipped'} onSend={(extra) => move('Shipped', extra)} /> : <div className="space-y-4">
           <Field label="Courier"><select className="input" value={courier.courier} onChange={(e) => setCourier({ ...courier, courier: e.target.value })}>{COURIERS.map((c) => <option key={c}>{c}</option>)}</select></Field>
           <Field label="Tracking number"><input className="input font-mono" value={courier.trackingNumber} onChange={(e) => setCourier({ ...courier, trackingNumber: e.target.value.trim() })} /></Field>
           <Button className="w-full" loading={busy === 'Shipped'} disabled={!courier.trackingNumber} onClick={() => move('Shipped', courier)}>Mark shipped</Button>
-        </div>
+        </div>}
       </Modal>
     </div>
   );
@@ -144,10 +200,10 @@ function ReturnBox({ order, onChange }) {
 export default function Orders() {
   const [sp, setSp] = useSearchParams();
   const status = sp.get('status') || '';
-  const [f, setF] = useState({ q: '', city: '', from: '', to: '' });
+  const [f, setF] = useState({ q: '', city: '', from: '', to: '', delivery: sp.get('delivery') || '' });
   const dq = useDebounce(f.q);
-  const params = { status: status || undefined, q: dq || undefined, city: f.city || undefined, from: f.from || undefined, to: f.to || undefined, limit: 100 };
-  const { data, loading, reload, setData } = useAsync(() => adminService.orders(params), [status, dq, f.city, f.from, f.to]);
+  const params = { status: status || undefined, q: dq || undefined, city: f.city || undefined, delivery: f.delivery || undefined, from: f.from || undefined, to: f.to || undefined, limit: 100 };
+  const { data, loading, reload, setData } = useAsync(() => adminService.orders(params), [status, dq, f.city, f.delivery, f.from, f.to]);
   const [sel, setSel] = useState([]);
   const [bulk, setBulk] = useState('Confirmed');
   const [busy, setBusy] = useState(false);
@@ -193,6 +249,7 @@ export default function Orders() {
       <div className="mb-4 flex flex-wrap gap-2">
         <input value={f.q} onChange={(e) => setF({ ...f, q: e.target.value })} placeholder="Order number, phone or name…" className="input max-w-xs bg-white" aria-label="Search orders" />
         <select value={f.city} onChange={(e) => setF({ ...f, city: e.target.value })} className="input w-auto bg-white" aria-label="City"><option value="">All cities</option>{CITIES.map((c) => <option key={c}>{c}</option>)}</select>
+        <select value={f.delivery} onChange={(e) => setF({ ...f, delivery: e.target.value })} className="input w-auto bg-white" aria-label="Delivery"><option value="">All deliveries</option><option value="same_day">Same-day only</option><option value="standard">Standard only</option></select>
         <input type="date" value={f.from} onChange={(e) => setF({ ...f, from: e.target.value })} className="input w-auto bg-white" aria-label="From date" />
         <input type="date" value={f.to} onChange={(e) => setF({ ...f, to: e.target.value })} className="input w-auto bg-white" aria-label="To date" />
       </div>
@@ -211,7 +268,7 @@ export default function Orders() {
             <td className="px-4 py-3 font-medium">{o.orderNumber}{o.returnRequest?.status === 'Requested' && <span className="ms-2 inline-block h-2 w-2 rounded-full bg-gold" title="Return requested" />}</td>
             <td className="px-4 text-stone">{date(o.createdAt)}</td>
             <td className="px-4">{o.shippingAddress.name}<span className="block text-xs text-stone">{o.shippingAddress.phone}</span></td>
-            <td className="px-4">{o.shippingAddress.city}</td>
+            <td className="whitespace-nowrap px-4">{o.shippingAddress.city}<SameDayBadge order={o} /></td>
             <td className="px-4">{pkr(o.total)}</td>
             <td className="px-4"><Badge s={o.status} /></td>
             <td className="px-4 text-xs">{o.paymentStatus === 'Paid' ? <span className="inline-flex items-center gap-1"><Check className="h-3 w-3" /> Paid</span> : 'Unpaid'}</td>
@@ -280,7 +337,7 @@ export function PrintDoc() {
       </header>
       <section className="grid grid-cols-2 gap-8 py-6 text-sm">
         <div><p className="label mb-1 text-[10px] text-stone">Ship to</p><p className="font-semibold">{o.shippingAddress.name}</p><p>{o.shippingAddress.phone}</p><p>{o.shippingAddress.street}, {o.shippingAddress.area}</p><p>{o.shippingAddress.city}</p></div>
-        <div><p className="label mb-1 text-[10px] text-stone">Payment</p><p>Cash on Delivery — {o.paymentStatus}</p>{o.courier && <p className="mt-2">Courier: {o.courier} · {o.trackingNumber}</p>}</div>
+        <div><p className="label mb-1 text-[10px] text-stone">Payment</p><p>Cash on Delivery — {o.paymentStatus}</p>{o.deliveryMethod === 'same_day' && <p className="mt-2 font-semibold">SAME-DAY DELIVERY</p>}{o.courier && <p className="mt-2">{o.rider ? 'Rider' : 'Courier'}: {o.courier} · {o.trackingNumber}</p>}</div>
       </section>
       <table className="w-full text-sm">
         <thead><tr className="border-b border-ink text-start">{['Item', 'SKU', 'Qty', ...(invoice ? ['Price', 'Total'] : ['Packed'])].map((h) => <th key={h} className="label py-2 text-start text-[10px]">{h}</th>)}</tr></thead>

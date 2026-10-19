@@ -128,7 +128,12 @@ function OrderDetail() {
       <h2 className="mt-4 text-4xl" dir="ltr">{o.orderNumber}</h2>
       <p className="text-sm text-muted">{date(o.createdAt, i18n.language)} · {t('checkout.cod')} · {o.paymentStatus}</p>
       <div className="my-10"><StatusTracker order={o} /></div>
-      {o.trackingNumber && <p className="mb-6 text-sm">Courier: <b>{o.courier}</b> · Tracking: <b>{o.trackingNumber}</b></p>}
+      {o.deliveryMethod === 'same_day' && !o.rider && ['Pending', 'Confirmed'].includes(o.status) && <p className="mb-6 text-sm"><b>{t('checkout.sameDay', { city: o.shippingAddress.city })}</b> · {t(o.sameDayEta === 'tomorrow' ? 'checkout.etaTomorrow' : 'checkout.etaToday')}</p>}
+      {o.rider ? (
+        <p className="mb-6 text-sm">{t('checkout.rider')}: <b>{o.rider.name}</b> ({o.rider.vehicle}) · <a href={`tel:${o.rider.phone}`} className="font-semibold underline" dir="ltr">{o.rider.phone}</a></p>
+      ) : (
+        o.trackingNumber && <p className="mb-6 text-sm">Courier: <b>{o.courier}</b> · Tracking: <b>{o.trackingNumber}</b></p>
+      )}
       <ul className="divide-y divide-line border-y border-line">
         {o.items.map((i) => (
           <li key={i.sku} className="flex items-center gap-4 py-4 text-sm">

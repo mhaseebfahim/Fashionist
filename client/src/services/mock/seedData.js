@@ -133,6 +133,17 @@ export const settings = {
   shippingRates: { Multan: 150, Lahore: 200, Karachi: 250, Islamabad: 220, Rawalpindi: 220 },
   defaultShippingFee: 250,
   freeShippingAbove: 5000,
+  // Demo riders — replace with real numbers in Admin → Settings → Same-day delivery.
+  sameDay: {
+    enabled: true,
+    city: 'Multan',
+    fee: 250,
+    cutoffHour: 15,
+    riders: [
+      { name: 'Bike Rider 1', phone: '03000000001', vehicle: 'Bike', isActive: true },
+      { name: 'Rickshaw 1', phone: '03000000002', vehicle: 'Rickshaw', isActive: true },
+    ],
+  },
   lowStockLevel: 5,
   returnWindowDays: 7,
   emailNotifications: { orderPlaced: true, statusChanged: true, lowStock: true },

@@ -21,6 +21,19 @@ export function shippingFeeFor(city, s, subtotal) {
   return s.shippingRates?.[city] ?? s.defaultShippingFee;
 }
 
+/* ---- Local same-day delivery (mirrors server/utils/totals.js) ---- */
+export const RIDER_VEHICLES = ['Bike', 'Rickshaw', 'Courier'];
+const sameCity = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+export const pkHour = (d = new Date()) => +new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Asia/Karachi' }).format(d);
+export function sameDayFor(city, s, now = new Date()) {
+  const sd = s?.sameDay;
+  if (!sd?.enabled || !sameCity(city, sd.city)) return { available: false };
+  return { available: true, eta: pkHour(now) < (sd.cutoffHour ?? 15) ? 'today' : 'tomorrow' };
+}
+export const deliveryFeeFor = (city, s, subtotal, method = 'standard') => (method === 'same_day' ? s?.sameDay?.fee ?? 0 : shippingFeeFor(city, s, subtotal));
+/** "3 PM" style label for the cut-off hour. */
+export const hourLabel = (h = 15) => `${h % 12 || 12} ${h < 12 ? 'AM' : 'PM'}`;
+
 export function couponDiscount(c, subtotal) {
   if (!c || c.type === 'freeship') return 0;
   let d = c.type === 'percent' ? Math.round((subtotal * c.value) / 100) : c.value;

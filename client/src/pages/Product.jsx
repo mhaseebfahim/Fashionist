@@ -3,7 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useTranslation } from 'react-i18next';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Banknote, ChevronLeft, ChevronRight, Heart, X } from 'lucide-react';
+import { Banknote, ChevronLeft, ChevronRight, Heart, X, Zap } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Accordion, ErrorPage, Img, Modal, Skeleton, Stars, useMeta } from '../components/ui.jsx';
 import { Stepper } from '../components/CartDrawer.jsx';
@@ -13,7 +13,7 @@ import { useAsync, useSettings } from '../hooks/index.js';
 import { catalogService } from '../services/index.js';
 import { addItem, setCartOpen, toggleWishlist } from '../features/store.js';
 import { colourHex, pct, pkr, tr } from '../utils/format.js';
-import { CITIES, shippingFeeFor } from '../utils/rules.js';
+import { CITIES, hourLabel, sameDayFor, shippingFeeFor } from '../utils/rules.js';
 
 function Gallery({ images, title }) {
   const [i, setI] = useState(0);
@@ -102,7 +102,11 @@ export default function Product() {
   const [size, setSize] = useState(null);
   const [qty, setQty] = useState(1);
   const [guide, setGuide] = useState(false);
-  const [city, setCity] = useState('Lahore');
+  const homeCity = useSelector((s) => { const a = s.auth.user?.addresses || []; return (a.find((x) => x.isDefault) || a[0])?.city; });
+  const [city, setCity] = useState(homeCity || 'Lahore');
+  useEffect(() => {
+    if (homeCity) setCity(homeCity); // the profile (with addresses) may arrive after the first render
+  }, [homeCity]);
   const p = data?.product;
   useMeta(p?.seo?.metaTitle?.replace(/ \| Fashionist$/, '') || p?.title, p?.seo?.metaDescription || p?.description, p?.images?.[0]);
   const wished = useSelector((s) => p && s.wishlist.items.some((w) => w._id === p._id));
@@ -184,6 +188,12 @@ export default function Product() {
                 </select>
               </div>
               <p className="mt-2 text-xs text-muted">{t('product.estimateTo', { city, days: ['Lahore', 'Multan', 'Karachi', 'Islamabad'].includes(city) ? '2–3' : '3–5', fee: fee ? pkr(fee) : t('cart.free') })}</p>
+              {sameDayFor(city, settings).available && (
+                <p className="mt-3 flex items-start gap-2 bg-surface p-3 text-xs">
+                  <Zap className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+                  <span><b className="block text-sm">{t('product.sameDay', { city: settings.sameDay.city })}</b>{t('product.sameDaySub', { time: hourLabel(settings.sameDay.cutoffHour), fee: pkr(settings.sameDay.fee) })}</span>
+                </p>
+              )}
             </div>
 
             <div className="mt-6">

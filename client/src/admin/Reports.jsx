@@ -6,7 +6,7 @@ import { Button, Field, Skeleton } from '../components/ui.jsx';
 import { useAsync } from '../hooks/index.js';
 import { adminService } from '../services/index.js';
 import { pkr } from '../utils/format.js';
-import { CITIES } from '../utils/rules.js';
+import { CITIES, PHONE_RE, RIDER_VEHICLES, hourLabel } from '../utils/rules.js';
 import { Card, DateRange, ImageField, PageHead, Tabs, Toggle, downloadText, presetRange } from './common.jsx';
 import { axis, tooltipStyle } from './Overview.jsx';
 
@@ -81,14 +81,22 @@ export function StoreSettings() {
   const store = (k, v) => setS({ ...cur, store: { ...cur.store, [k]: v } });
   const setRates = (list) => setS({ ...cur, shippingRates: Object.fromEntries(list) });
   const notif = cur.emailNotifications || {};
+  const sd = cur.sameDay || { enabled: false, city: 'Multan', fee: 250, cutoffHour: 15, riders: [] };
+  const setSd = (patch) => setS({ ...cur, sameDay: { ...sd, ...patch } });
+  const setRider = (i, patch) => setSd({ riders: sd.riders.map((x, n) => (n === i ? { ...x, ...patch } : x)) });
   const save = async () => {
     if (cur.store.email && !/^\S+@\S+\.\S+$/.test(cur.store.email)) return toast.error('Store email is not valid');
     if (rates.some(([c]) => !c.trim())) return toast.error('Every delivery rate needs a city');
+    if (sd.enabled && !sd.city?.trim()) return toast.error('Same-day delivery needs a city');
+    const badRider = (sd.riders || []).find((x) => x.name.trim().length < 2 || !PHONE_RE.test(x.phone.trim()));
+    if (badRider) return toast.error(`Rider "${badRider.name || 'unnamed'}" needs a name and a 03XXXXXXXXX mobile number`);
+    if (sd.enabled && !(sd.riders || []).some((x) => x.isActive)) toast('Tip: add at least one active rider so same-day orders can be sent out', { icon: 'ℹ️' });
     setBusy(true);
     try {
       const n = (k) => Math.max(0, +cur[k] || 0);
       const { store: st, emailNotifications } = cur;
-      const r = await adminService.saveSettings({ store: st, emailNotifications, shippingRates: Object.fromEntries(rates.map(([c, f]) => [c.trim(), Math.max(0, +f || 0)])), defaultShippingFee: n('defaultShippingFee'), freeShippingAbove: n('freeShippingAbove'), lowStockLevel: n('lowStockLevel'), returnWindowDays: n('returnWindowDays') });
+      const sameDay = { enabled: !!sd.enabled, city: (sd.city || '').trim(), fee: Math.max(0, +sd.fee || 0), cutoffHour: Math.min(23, Math.max(0, Math.round(+sd.cutoffHour || 0))), riders: (sd.riders || []).map(({ name, phone, vehicle, isActive }) => ({ name: name.trim(), phone: phone.trim(), vehicle, isActive: isActive !== false })) };
+      const r = await adminService.saveSettings({ store: st, emailNotifications, sameDay, shippingRates: Object.fromEntries(rates.map(([c, f]) => [c.trim(), Math.max(0, +f || 0)])), defaultShippingFee: n('defaultShippingFee'), freeShippingAbove: n('freeShippingAbove'), lowStockLevel: n('lowStockLevel'), returnWindowDays: n('returnWindowDays') });
       setS(r.settings);
       toast.success('Settings saved');
     } catch (e) {
@@ -127,6 +135,30 @@ export function StoreSettings() {
               <datalist id="pk-cities">{CITIES.map((c) => <option key={c} value={c} />)}</datalist>
             </div>
             <button onClick={() => setRates([...rates, [CITIES.find((c) => !cur.shippingRates?.[c]) || '', cur.defaultShippingFee]])} className="mt-3 text-xs underline">+ Add city</button>
+          </Card>
+          <Card title="Same-day delivery (local riders)" action={<Toggle checked={!!sd.enabled} onChange={(v) => setSd({ enabled: v })} label="Same-day delivery on" />}>
+            <p className="mb-4 text-xs text-stone">Customers whose delivery city is <b>{sd.city || '—'}</b> are offered same-day delivery at checkout (picked automatically). Orders after the cut-off are delivered the next morning. Rider numbers stay private — customers only see the rider you send.</p>
+            <div className={`grid gap-4 sm:grid-cols-3 ${sd.enabled ? '' : 'opacity-50'}`}>
+              <Field label="City"><input list="pk-cities" className="input bg-white" value={sd.city} onChange={(e) => setSd({ city: e.target.value })} /></Field>
+              <Field label="Fee (PKR)"><input type="number" min={0} className="input bg-white" value={sd.fee} onChange={(e) => setSd({ fee: e.target.value })} /></Field>
+              <Field label="Order cut-off (PKT)">
+                <select className="input bg-white" value={sd.cutoffHour} onChange={(e) => setSd({ cutoffHour: +e.target.value })}>{Array.from({ length: 24 }, (_, h) => <option key={h} value={h}>{hourLabel(h)}</option>)}</select>
+              </Field>
+            </div>
+            <p className="label mb-2 mt-5 text-[10px] text-stone">Riders & local couriers</p>
+            {!sd.riders?.length && <p className="text-xs text-stone">No riders yet — add the bike, rickshaw or local courier numbers you use.</p>}
+            <div className="space-y-2">
+              {(sd.riders || []).map((x, i) => (
+                <div key={x._id || i} className="grid grid-cols-[1fr_130px] gap-2 sm:grid-cols-[1fr_130px_110px_auto_auto]">
+                  <input className="input bg-white px-3 py-2" placeholder="Name" value={x.name} aria-label="Rider name" onChange={(e) => setRider(i, { name: e.target.value })} />
+                  <input className="input bg-white px-3 py-2 font-mono" placeholder="03XXXXXXXXX" inputMode="numeric" maxLength={11} value={x.phone} aria-label="Rider mobile" onChange={(e) => setRider(i, { phone: e.target.value.replace(/\D/g, '') })} />
+                  <select className="input bg-white px-3 py-2" value={x.vehicle} aria-label="Vehicle" onChange={(e) => setRider(i, { vehicle: e.target.value })}>{RIDER_VEHICLES.map((vh) => <option key={vh}>{vh}</option>)}</select>
+                  <span className="flex items-center"><Toggle checked={x.isActive !== false} onChange={(val) => setRider(i, { isActive: val })} label={`${x.name || 'Rider'} active`} /></span>
+                  <button onClick={() => setSd({ riders: sd.riders.filter((_, n) => n !== i) })} aria-label="Remove rider" className="px-2 text-stone hover:text-rose"><Trash2 className="h-4 w-4" /></button>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setSd({ riders: [...(sd.riders || []), { name: '', phone: '', vehicle: 'Bike', isActive: true }] })} className="mt-3 text-xs underline">+ Add rider</button>
           </Card>
           <Card title="Stock & returns">
             <div className="grid gap-4 sm:grid-cols-2">
