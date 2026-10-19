@@ -5,6 +5,7 @@ import { Facebook, Instagram, MessageCircle, Youtube } from 'lucide-react';
 import { Logo } from './ui.jsx';
 import { useSettings } from '../hooks/index.js';
 import { setLang } from '../features/store.js';
+import { waHref } from '../utils/format.js';
 
 const L = (o, lang, k) => (lang === 'ur' && o[`${k}Ur`]) || o[k];
 
@@ -38,11 +39,13 @@ export default function Footer() {
                 <li><a href={`tel:${s?.store.phone?.replace(/\s/g, '')}`}>{s?.store.phone}</a></li>
                 <li><a href={`mailto:${s?.store.email}`}>{s?.store.email}</a></li>
                 <li>{s?.store.address}</li>
-                <li>
-                  <a href={`https://wa.me/${s?.store.whatsapp || ''}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-ivory link-grow">
-                    <MessageCircle className="h-4 w-4" /> {t('footer.whatsapp')}
-                  </a>
-                </li>
+                {waHref(s?.store.whatsapp) && (
+                  <li>
+                    <a href={waHref(s.store.whatsapp, 'Hi Fashionist!')} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 text-ivory link-grow">
+                      <MessageCircle className="h-4 w-4" /> {t('footer.whatsapp')}
+                    </a>
+                  </li>
+                )}
               </ul>
             </div>
           </div>

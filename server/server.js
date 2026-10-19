@@ -25,8 +25,12 @@ try {
   await connectDB();
 } catch (err) {
   console.error('DB connection failed:', err.message);
+  if (/auth/i.test(err.message)) console.error('→ MongoDB rejected the username/password in MONGO_URI. Reset it in Atlas → Database Access and update MONGO_URI.');
+  if (/whitelist|ENOTFOUND|timed out|Server selection/i.test(err.message)) console.error('→ Check Atlas → Network Access allows this server (0.0.0.0/0 for Render) and that MONGO_URI is correct.');
   process.exit(1);
 }
+const { bootstrap } = await import('./utils/bootstrap.js');
+await bootstrap().catch((e) => console.error('Startup setup failed:', e.message));
 const server = app.listen(port, () => {
   console.log(`Fashionist API on :${port} (${env.nodeEnv}) · CORS: ${env.clientUrls.join(', ')} · email: ${env.emailProvider} · OTP verification: ${env.emailVerification ? 'ON' : 'off'} · Cloudinary: ${cloudinaryReady() ? 'ready' : 'NOT configured'}`);
   if (process.env.EMAIL_VERIFICATION_ENABLED === 'true' && !env.emailVerification) console.warn('⚠ EMAIL_VERIFICATION_ENABLED=true but no working email provider (RESEND_API_KEY / SMTP_HOST missing) — OTP stays OFF so sign-ups keep working');

@@ -4,7 +4,7 @@ import { useSelector } from 'react-redux';
 import { Accordion, ErrorPage, Img, Reveal, Skeleton, useMeta } from '../components/ui.jsx';
 import { useAsync, useSettings } from '../hooks/index.js';
 import { cmsService } from '../services/index.js';
-import { tr } from '../utils/format.js';
+import { tr, waHref } from '../utils/format.js';
 
 /** Renders one CMS page block (heading | paragraph | image | twoColumn | faq). */
 export function Block({ b, lang }) {
@@ -53,7 +53,7 @@ export default function StaticPage() {
         ))}
         {slug === 'contact' && s && (
           <dl className="grid gap-8 pt-6 sm:grid-cols-2">
-            {[['Phone', <a key="p" href={`tel:${s.store.phone?.replace(/\s/g, '')}`}>{s.store.phone}</a>], ['Email', <a key="e" href={`mailto:${s.store.email}`}>{s.store.email}</a>], ['WhatsApp', <a key="w" className="underline" href={`https://wa.me/${s.store.whatsapp}`}>Chat with us</a>], ['Studio', s.store.address]].map(([k, v]) => (
+            {[['Phone', <a key="p" href={`tel:${s.store.phone?.replace(/\s/g, '')}`}>{s.store.phone}</a>], ['Email', <a key="e" href={`mailto:${s.store.email}`}>{s.store.email}</a>], ...(waHref(s.store.whatsapp) ? [['WhatsApp', <a key="w" className="underline" target="_blank" rel="noreferrer" href={waHref(s.store.whatsapp, 'Hi Fashionist!')}>Chat with us</a>]] : []),['Studio', s.store.address]].map(([k, v]) => (
               <div key={k}><dt className="label text-gold">{k}</dt><dd className="mt-2 font-display text-2xl">{v}</dd></div>
             ))}
           </dl>

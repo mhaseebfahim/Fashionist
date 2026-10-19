@@ -2,6 +2,7 @@
 // envelope ({ success, data, meta }) and business rules; state persists in localStorage.
 import * as seed from './seedData.js';
 import { parseQuery, scoreProduct, searchFields } from '../../utils/search.js';
+import { waNumber } from '../../utils/format.js';
 import { cmsDefaults } from '../../cms/defaults.js';
 import { ATTR_FILTERS, ORDER_STATUSES, canTransition, couponDiscount, couponError, deliveryFeeFor, isWithinReturnWindow, MAX_QTY, PHONE_RE, sameDayFor } from '../../utils/rules.js';
 
@@ -863,6 +864,7 @@ const routes = [
   ['get', /^\/admin\/settings$/, ({ cfg }) => (requireAdmin(cfg), { settings: db.settings })],
   ['put', /^\/admin\/settings$/, ({ cfg, body }) => {
     requireAdmin(cfg);
+    if (body.store?.whatsapp && String(body.store.whatsapp).trim()) body.store.whatsapp = waNumber(body.store.whatsapp) || fail(422, 'WhatsApp must be a Pakistani mobile number, e.g. 03001234567');
     db.settings = { ...db.settings, ...body, store: { ...db.settings.store, ...(body.store || {}) }, emailNotifications: { ...db.settings.emailNotifications, ...(body.emailNotifications || {}) } };
     log('settings.update', 'Settings', '', { fields: Object.keys(body) });
     return { settings: db.settings };

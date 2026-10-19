@@ -6,6 +6,7 @@ import Header, { AnnouncementBar } from '../components/Header.jsx';
 import Footer from '../components/Footer.jsx';
 import CartDrawer from '../components/CartDrawer.jsx';
 import SearchOverlay from '../components/SearchOverlay.jsx';
+import WhatsAppButton from '../components/WhatsAppButton.jsx';
 
 export default function StoreLayout() {
   const { pathname } = useLocation();
@@ -24,6 +25,7 @@ export default function StoreLayout() {
       <Footer />
       <CartDrawer />
       <SearchOverlay />
+      <WhatsAppButton />
     </div>
   );
 }

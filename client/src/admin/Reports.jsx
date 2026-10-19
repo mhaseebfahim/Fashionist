@@ -5,7 +5,7 @@ import { Download, Trash2 } from 'lucide-react';
 import { Button, Field, Skeleton } from '../components/ui.jsx';
 import { useAsync } from '../hooks/index.js';
 import { adminService } from '../services/index.js';
-import { pkr } from '../utils/format.js';
+import { pkr, waHref, waNumber } from '../utils/format.js';
 import { CITIES, PHONE_RE, RIDER_VEHICLES, hourLabel } from '../utils/rules.js';
 import { Card, DateRange, ImageField, PageHead, Tabs, Toggle, downloadText, presetRange } from './common.jsx';
 import { axis, tooltipStyle } from './Overview.jsx';
@@ -86,6 +86,7 @@ export function StoreSettings() {
   const setRider = (i, patch) => setSd({ riders: sd.riders.map((x, n) => (n === i ? { ...x, ...patch } : x)) });
   const save = async () => {
     if (cur.store.email && !/^\S+@\S+\.\S+$/.test(cur.store.email)) return toast.error('Store email is not valid');
+    if (cur.store.whatsapp && !waNumber(cur.store.whatsapp)) return toast.error('WhatsApp needs a full mobile number, e.g. 03001234567');
     if (rates.some(([c]) => !c.trim())) return toast.error('Every delivery rate needs a city');
     if (sd.enabled && !sd.city?.trim()) return toast.error('Same-day delivery needs a city');
     const badRider = (sd.riders || []).find((x) => x.name.trim().length < 2 || !PHONE_RE.test(x.phone.trim()));
@@ -112,9 +113,16 @@ export function StoreSettings() {
         <Card title="Store information">
           <div className="space-y-4">
             <ImageField label="Logo" value={cur.store.logo} onChange={(v) => store('logo', v)} aspect="aspect-[3/1]" />
-            {[['name', 'Store name'], ['phone', 'Phone'], ['email', 'Email'], ['whatsapp', 'WhatsApp (92XXXXXXXXXX)'], ['address', 'Address']].map(([k, l]) => (
+            {[['name', 'Store name'], ['phone', 'Phone'], ['email', 'Email'], ['address', 'Address']].map(([k, l]) => (
               <Field key={k} label={l}><input className="input bg-white" value={cur.store[k] || ''} onChange={(e) => store(k, e.target.value)} /></Field>
             ))}
+            <Field label="WhatsApp number (03XXXXXXXXX)" error={cur.store.whatsapp && !waNumber(cur.store.whatsapp) ? 'Enter a full mobile number, e.g. 03001234567' : undefined}>
+              <div className="flex gap-2">
+                <input className="input bg-white font-mono" inputMode="tel" placeholder="03001234567" value={cur.store.whatsapp || ''} onChange={(e) => store('whatsapp', e.target.value)} />
+                {waHref(cur.store.whatsapp) && <a href={waHref(cur.store.whatsapp, 'Test from Fashionist admin')} target="_blank" rel="noreferrer" className="btn-outline shrink-0 px-3 py-2">Test</a>}
+              </div>
+            </Field>
+            <p className="-mt-2 text-xs text-stone">Shown as the green chat button on every page, in the footer and on the Contact page. Leave empty to hide it.</p>
           </div>
         </Card>
         <div className="space-y-6">

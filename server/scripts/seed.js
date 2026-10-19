@@ -16,8 +16,10 @@ import ActivityLog from '../models/ActivityLog.js';
 import { SiteTheme, Navigation, AnnouncementBar, HomepageSection, Page, Media } from '../models/Cms.js';
 import * as data from '../../client/src/services/mock/seedData.js';
 import { cmsDefaults } from '../../client/src/cms/defaults.js';
+import { ensureAdmin } from '../utils/bootstrap.js';
 
-export async function seed({ reset = false, log = console.log } = {}) {
+/** `demo: false` (used on a fresh production deploy) skips the sample customers, orders and reviews. */
+export async function seed({ reset = false, demo = true, log = console.log } = {}) {
   const { ADMIN_EMAIL = 'admin.fashionist@gmail.com', ADMIN_PASSWORD } = process.env;
   if (!ADMIN_PASSWORD) throw new Error('Set ADMIN_PASSWORD in server/.env');
 
@@ -27,17 +29,10 @@ export async function seed({ reset = false, log = console.log } = {}) {
     log('Reset: cleared demo collections');
   }
 
-  // Exactly one admin: demote anyone else, then upsert the owner from .env.
-  await User.updateMany({ role: 'admin', email: { $ne: ADMIN_EMAIL } }, { role: 'customer' });
-  let admin = await User.findOne({ email: ADMIN_EMAIL });
-  if (!admin) admin = new User({ name: 'Store Owner', email: ADMIN_EMAIL, phone: '03001234567' });
-  admin.role = 'admin';
-  admin.isEmailVerified = true;
-  await admin.setPassword(ADMIN_PASSWORD);
-  await admin.save();
+  await ensureAdmin({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD });
 
   const customers = [];
-  for (const c of data.customers) {
+  for (const c of demo ? data.customers : []) {
     let u = await User.findOne({ email: c.email });
     if (!u) {
       u = new User({ ...c, role: 'customer', isEmailVerified: true });
@@ -58,7 +53,7 @@ export async function seed({ reset = false, log = console.log } = {}) {
     const products = await Product.insertMany(data.products.map((p, i) => ({ ...p, category: cats[p.category], createdAt: new Date(Date.now() - i * 3600000) })));
     log(`Products: ${products.length}`);
   }
-  if (!(await Order.countDocuments())) {
+  if (demo && !(await Order.countDocuments())) {
     const products = await Product.find().sort({ _id: 1 }).lean();
     const orders = await Order.insertMany(data.makeOrders(products, customers.map((c) => c.toObject())));
     const reviews = await Review.insertMany(data.makeReviews(orders.map((o) => o.toObject())));
@@ -69,7 +64,8 @@ export async function seed({ reset = false, log = console.log } = {}) {
     log(`Orders: ${orders.length}, reviews: ${reviews.length}`);
   }
   if (!(await Coupon.countDocuments())) await Coupon.insertMany(data.coupons);
-  if (!(await Settings.countDocuments())) await Settings.create(data.settings);
+  // Real stores start without the demo riders — the admin adds their own in Settings.
+  if (!(await Settings.countDocuments())) await Settings.create(demo ? data.settings : { ...data.settings, sameDay: { ...data.settings.sameDay, riders: [] } });
 
   // CMS defaults
   if (!(await SiteTheme.countDocuments())) await SiteTheme.create(cmsDefaults.theme);

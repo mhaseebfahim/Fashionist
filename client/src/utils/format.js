@@ -10,3 +10,18 @@ export const colourHex = {
   'Light Blue': '#A7C7E7', Indigo: '#2E3A6E', Blue: '#2F5DA8', Brown: '#6B4226', Tan: '#C19A6B', Green: '#1F5E3B', Silver: '#C0C0C0', Red: '#C0392B',
   Mixed: 'conic-gradient(#111 0 33%, #fff 0 66%, #1F2A44 0)',
 };
+
+/** Any Pakistani mobile format → "923001234567" for wa.me (mirrors server/utils/helpers.js toWhatsapp); null if invalid. */
+export function waNumber(raw) {
+  const d = String(raw || '').replace(/\D/g, '');
+  if (/^03\d{9}$/.test(d)) return `92${d.slice(1)}`;
+  if (/^3\d{9}$/.test(d)) return `92${d}`;
+  if (/^923\d{9}$/.test(d)) return d;
+  if (/^00923\d{9}$/.test(d)) return d.slice(2);
+  return null;
+}
+/** wa.me link with an optional pre-filled message, or null when no valid number is set. */
+export const waHref = (raw, text) => {
+  const n = waNumber(raw);
+  return n ? `https://wa.me/${n}${text ? `?text=${encodeURIComponent(text)}` : ''}` : null;
+};

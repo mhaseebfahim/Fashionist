@@ -1,5 +1,9 @@
-# Render Blueprint — New → Blueprint → pick this repo. Creates the Fashionist API web service.
+# Render Blueprint — New → Blueprint → pick this repo. Creates the API (fashionist-api) and the website (fashionist-web).
 # Secrets marked `sync: false` are entered in the Render dashboard (never committed).
+#
+# On every start the API creates/updates the admin from ADMIN_EMAIL + ADMIN_PASSWORD, and fills an EMPTY
+# database with the menswear catalogue and website content (set SEED_ON_EMPTY=false to turn that off).
+# MongoDB Atlas → Network Access must allow 0.0.0.0/0 — Render's outgoing IPs change.
 services:
   - type: web
     name: fashionist-api
@@ -56,3 +60,33 @@ services:
         sync: false
       - key: GOOGLE_CLIENT_ID
         sync: false
+
+  # The storefront + admin panel (React build). After the first deploy:
+  #   1. set VITE_API_URL here to  https://<your fashionist-api URL>/api  and redeploy this site
+  #   2. add this site's URL to CLIENT_URL on fashionist-api (comma separated) so CORS allows it
+  - type: web
+    name: fashionist-web
+    runtime: static
+    rootDir: client
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    autoDeploy: true
+    pullRequestPreviewsEnabled: false
+    envVars:
+      - key: NODE_VERSION
+        value: 20.18.0
+      - key: VITE_USE_MOCK
+        value: "false"
+      - key: VITE_API_URL
+        sync: false # e.g. https://fashionist-api.onrender.com/api
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /assets/*
+        name: Cache-Control
+        value: public, max-age=31536000, immutable
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff

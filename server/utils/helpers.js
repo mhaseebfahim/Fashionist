@@ -56,3 +56,13 @@ export const dateRange = (q, defaultDays = 30) => {
   const from = q.from ? new Date(`${q.from}T00:00:00`) : new Date(to.getTime() - defaultDays * 86400000);
   return { from, to };
 };
+
+/** Any Pakistani mobile format (0300 1234567, +92-300-1234567, 3001234567) → "923001234567" for wa.me; null if it is not one. */
+export function toWhatsapp(raw) {
+  const d = String(raw || '').replace(/\D/g, '');
+  if (/^03\d{9}$/.test(d)) return `92${d.slice(1)}`;
+  if (/^3\d{9}$/.test(d)) return `92${d}`;
+  if (/^923\d{9}$/.test(d)) return d;
+  if (/^00923\d{9}$/.test(d)) return d.slice(2);
+  return null;
+}

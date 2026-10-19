@@ -10,7 +10,7 @@ import Settings from '../models/Settings.js';
 import ActivityLog from '../models/ActivityLog.js';
 import { Media } from '../models/Cms.js';
 import { AppError, asyncHandler } from '../utils/AppError.js';
-import { dateRange, escapeRegex, logActivity, parseCsv, slugify } from '../utils/helpers.js';
+import { dateRange, escapeRegex, logActivity, parseCsv, slugify, toWhatsapp } from '../utils/helpers.js';
 import { cloudinaryReady, removeFromCloudinary, toCloudinary } from '../middleware/upload.js';
 import { refreshRating } from './catalogController.js';
 
@@ -341,7 +341,14 @@ export const getSettings = asyncHandler(async (_req, res) => res.json({ settings
 export const updateSettings = asyncHandler(async (req, res) => {
   const settings = await Settings.current();
   const { store, shippingRates, emailNotifications, sameDay, ...rest } = req.body;
-  if (store) settings.store = { ...settings.store.toObject(), ...store };
+  if (store) {
+    if (store.whatsapp !== undefined && String(store.whatsapp).trim()) {
+      const wa = toWhatsapp(store.whatsapp);
+      if (!wa) throw new AppError('WhatsApp must be a Pakistani mobile number, e.g. 03001234567', 422, [{ field: 'store.whatsapp', message: 'Enter a mobile number like 03001234567' }]);
+      store.whatsapp = wa;
+    }
+    settings.store = { ...settings.store.toObject(), ...store };
+  }
   if (sameDay) {
     const { riders, ...opts } = sameDay;
     for (const k of ['enabled', 'city', 'fee', 'cutoffHour']) if (opts[k] !== undefined) settings.set(`sameDay.${k}`, opts[k]);
