@@ -53,7 +53,7 @@ export default function Shop({ search }) {
     catalogService.products({ ...query, page }).then((r) => {
       if (!alive) return;
       setItems(r.products);
-      setMeta(r);
+      setMeta(r.meta || r);
       setLoading(false);
     });
     return () => (alive = false);
@@ -64,7 +64,7 @@ export default function Shop({ search }) {
     const next = meta.page + 1;
     const r = await catalogService.products({ ...query, page: next });
     setItems((x) => [...x, ...r.products]);
-    setMeta(r);
+    setMeta(r.meta || r);
     setMore(false);
   };
 
@@ -174,7 +174,7 @@ export default function Shop({ search }) {
           <div className="relative h-[42vh] min-h-[280px] overflow-hidden bg-ink text-ivory">
             <Img src={catObj.image} alt="" eager className="absolute inset-0 opacity-60" />
             <div className="container-site relative flex h-full flex-col justify-end pb-10">
-              <p className="label text-gold">Fashionist · SS 2026</p>
+              <p className="label text-gold">Fashionist · Menswear</p>
               <h1 className="mt-3 text-6xl md:text-8xl">{title}</h1>
             </div>
           </div>

@@ -115,7 +115,7 @@ export default function Header() {
                 <Link to={open.link} className="group col-span-6 grid grid-cols-2 gap-6">
                   <Img src={open.image} alt="" className="card-img aspect-[4/5]" />
                   <div className="self-end">
-                    <p className="label text-gold">SS 2026</p>
+                    <p className="label text-gold">Menswear 2026</p>
                     <p className="mt-2 font-display text-4xl">{L(open, lang)} — the new edit</p>
                     <span className="label link-grow mt-4 inline-block">{t('home.viewAll')}</span>
                   </div>
