@@ -12,6 +12,10 @@ export const env = {
   get clientUrls() {
     return list(process.env.CLIENT_URL, 'http://localhost:5173');
   },
+  /** Public storefront URL (password-reset links, sitemap). */
+  get siteUrl() {
+    return (process.env.SITE_URL || this.clientUrls.find((u) => u.startsWith('https://')) || this.clientUrls[0]).replace(/\/$/, '');
+  },
   /** OTP email verification on sign-up. Keep false until an email provider (Resend/SMTP) is configured. */
   get emailVerification() {
     return bool(process.env.EMAIL_VERIFICATION_ENABLED, false);

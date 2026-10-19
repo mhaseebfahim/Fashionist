@@ -103,7 +103,7 @@ try {
   await page.evaluate(() => localStorage.removeItem('fashionist:token'));
 
   // ---- admin (Atelier) ----
-  await login(process.env.CHECK_ADMIN_EMAIL || 'admin@fashionist.pk', process.env.CHECK_ADMIN_PASSWORD || 'Admin@123');
+  await login(process.env.CHECK_ADMIN_EMAIL || 'admin.fashionist@gmail.com', process.env.CHECK_ADMIN_PASSWORD || 'Admin@123');
   for (const [p, t] of [['/admin', 'Today'], ['/admin/orders', 'Orders'], ['/admin/orders?status=Pending', 'Pending'], ['/admin/returns', 'Returns'], ['/admin/products', 'Products'], ['/admin/products/new', 'New product'], ['/admin/import', 'Bulk Import'], ['/admin/categories', 'Categories'], ['/admin/inventory?low=true', 'Inventory'], ['/admin/customers', 'Customers'], ['/admin/coupons', 'WELCOME10'], ['/admin/reviews', 'Reviews'], ['/admin/reports', 'Reports'], ['/admin/activity', 'Activity'], ['/admin/settings', 'Delivery'], ['/admin/cms/homepage', 'Homepage'], ['/admin/cms/theme', 'Theme'], ['/admin/cms/navigation', 'Navigation'], ['/admin/cms/announcement', 'Announcement'], ['/admin/cms/pages', 'Pages'], ['/admin/cms/media', 'Media Library']])
     await visit(p, t);
   // open a product editor and an order drawer

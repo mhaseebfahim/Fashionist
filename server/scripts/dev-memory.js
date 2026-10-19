@@ -6,7 +6,7 @@ import { MongoMemoryReplSet } from 'mongodb-memory-server';
 import mongoose from 'mongoose';
 
 process.env.JWT_SECRET ||= 'dev-memory-secret-0123456789abcdef0123456789abcdef';
-process.env.ADMIN_EMAIL ||= 'admin@fashionist.pk';
+process.env.ADMIN_EMAIL ||= 'admin.fashionist@gmail.com';
 process.env.ADMIN_PASSWORD ||= 'Admin@123';
 process.env.CLIENT_URL ||= 'http://localhost:5173,http://localhost:4173';
 

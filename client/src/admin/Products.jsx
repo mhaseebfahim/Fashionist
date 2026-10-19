@@ -308,13 +308,13 @@ export function ProductEditor() {
           {tab === 'seo' && (
             <Card>
               <div className="space-y-4">
-                <Field label="URL slug" hint={`fashionist.pk/product/${p.slug || '…'}`}><input className="input bg-white font-mono text-sm" value={p.slug} onChange={(e) => (setSlugTouched(true), set('slug', slugify(e.target.value)))} /></Field>
+                <Field label="URL slug" hint={`fashionist.store/product/${p.slug || '…'}`}><input className="input bg-white font-mono text-sm" value={p.slug} onChange={(e) => (setSlugTouched(true), set('slug', slugify(e.target.value)))} /></Field>
                 <Field label={`Meta title (${(p.seo.metaTitle || '').length}/70)`}><input maxLength={70} className="input bg-white" value={p.seo.metaTitle || ''} placeholder={`${p.title} | Fashionist`} onChange={(e) => set('seo', { ...p.seo, metaTitle: e.target.value })} /></Field>
                 <Field label={`Meta description (${(p.seo.metaDescription || '').length}/170)`}><textarea maxLength={170} rows={3} className="input bg-white" value={p.seo.metaDescription || ''} onChange={(e) => set('seo', { ...p.seo, metaDescription: e.target.value })} /></Field>
                 <div className="border border-hairline bg-ivory p-4 text-sm">
                   <p className="label mb-2 text-[9px] text-stone">Search preview</p>
                   <p className="text-[#1a0dab]">{p.seo.metaTitle || `${p.title || 'Product'} | Fashionist`}</p>
-                  <p className="text-xs text-[#006621]">fashionist.pk/product/{p.slug}</p>
+                  <p className="text-xs text-[#006621]">fashionist.store/product/{p.slug}</p>
                   <p className="text-xs text-stone">{p.seo.metaDescription || p.description?.slice(0, 160)}</p>
                 </div>
               </div>

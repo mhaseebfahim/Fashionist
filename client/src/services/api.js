@@ -4,7 +4,8 @@ export const TOKEN_KEY = 'fashionist:token';
 export const USE_MOCK = import.meta.env.VITE_USE_MOCK !== 'false';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || '/api',
+  // VITE_API_URL wins; on fashionist.store the API lives at api.fashionist.store.
+  baseURL: import.meta.env.VITE_API_URL || (/(^|\.)fashionist\.store$/.test(window.location.hostname) ? 'https://api.fashionist.store/api' : '/api'),
   timeout: 20000,
   // Mock API is a separate lazy chunk — production builds with VITE_USE_MOCK=false never download it.
   ...(USE_MOCK && { adapter: (cfg) => import('./mock/adapter.js').then((m) => m.mockAdapter(cfg)) }),

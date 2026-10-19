@@ -6,7 +6,7 @@ import request from 'supertest';
 
 process.env.NODE_ENV = 'test';
 process.env.JWT_SECRET ||= 'smoke-test-secret-long-enough-0123456789abcdef';
-process.env.ADMIN_EMAIL = 'admin@fashionist.pk';
+process.env.ADMIN_EMAIL = 'admin.fashionist@gmail.com';
 process.env.ADMIN_PASSWORD = 'Admin@12345';
 
 const repl = await MongoMemoryReplSet.create({ replSet: { count: 1, storageEngine: 'wiredTiger' } });
@@ -72,7 +72,7 @@ try {
   }
 
   // ---- admin ----
-  const atoken = await login('admin@fashionist.pk', 'Admin@12345');
+  const atoken = await login('admin.fashionist@gmail.com', 'Admin@12345');
   const A = { Authorization: `Bearer ${atoken}` };
   check('admin login', !!atoken);
   const dash = (await api().get('/api/admin/dashboard').set(A)).body.data;

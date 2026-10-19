@@ -25,7 +25,7 @@ function fresh() {
   for (const c of seed.categories) categories.push({ _id: id(), isActive: true, ...c, parent: c.parent ? categories.find((x) => x.slug === c.parent)._id : null, createdAt: now() });
   const catId = Object.fromEntries(categories.map((c) => [c.slug, c._id]));
   const products = seed.products.map((p, i) => ({ _id: id(), ...clone(p), category: catId[p.category], createdAt: new Date(Date.now() - i * 3600000).toISOString() }));
-  const admin = { _id: id(), isEmailVerified: true, name: 'Store Owner', email: 'admin@fashionist.pk', phone: '03001234567', role: 'admin', password: 'Admin@123', addresses: [], language: 'en', createdAt: new Date(Date.now() - 90 * DAY).toISOString() };
+  const admin = { _id: id(), isEmailVerified: true, name: 'Store Owner', email: 'admin.fashionist@gmail.com', phone: '03001234567', role: 'admin', password: 'Admin@123', addresses: [], language: 'en', createdAt: new Date(Date.now() - 90 * DAY).toISOString() };
   const customers = seed.customers.map((c, i) => ({ _id: id(), isEmailVerified: true, ...clone(c), addresses: c.addresses.map((a) => ({ _id: id(), ...a })), role: 'customer', password: seed.CUSTOMER_PASSWORD, language: 'en', createdAt: new Date(Date.now() - (40 - i * 12) * DAY).toISOString() }));
   const orders = seed.makeOrders(products, customers).map((o) => clone({ _id: id(), ...o }));
   const reviews = seed.makeReviews(orders).map((r) => ({ _id: id(), ...r, createdAt: now() }));

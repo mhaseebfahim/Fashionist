@@ -23,7 +23,9 @@ services:
       - key: JWT_EXPIRES_IN
         value: 7d
       - key: CLIENT_URL
-        sync: false # e.g. https://fashionist.vercel.app,https://www.fashionist.pk
+        sync: false # e.g. https://fashionist.store,https://www.fashionist.store
+      - key: SITE_URL
+        value: https://fashionist.store
       - key: ADMIN_EMAIL
         sync: false
       - key: ADMIN_PASSWORD
@@ -34,6 +36,7 @@ services:
         value: gmail.com,outlook.com
       - key: EMAIL_PROVIDER
         value: console
+      # MAIL_FROM: Fashionist <no-reply@fashionist.store> (verify fashionist.store in Resend first)
       - key: RESEND_API_KEY
         sync: false
       - key: MAIL_FROM

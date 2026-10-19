@@ -49,6 +49,7 @@ export const catalogRoutes = Router()
   .post('/products/:id/reviews', protect, validate([mongoId(), body('rating').isInt({ min: 1, max: 5 }), body('comment').optional().isString().trim().isLength({ max: 1000 })]), catalog.createReview)
   .get('/products/:slug', catalog.getProduct)
   .get('/settings/public', catalog.publicSettings)
+  .get('/sitemap.xml', catalog.sitemap)
   .get('/cms', cms.publicCms)
   .get('/cms/pages/:slug', cms.publicPage);
 

@@ -88,7 +88,7 @@ export const sections = [
       { name: 'Sana T., Islamabad', rating: 5, text: 'Exchange was effortless. Fashionist is my go-to for Eid now.', textUr: 'تبادلہ بہت آسان تھا۔' },
     ],
   }),
-  s(8, 'lookbookGrid', 'The Lookbook', 'لُک بُک', { handle: '@fashionist.pk', images: [IMG.w5, IMG.m3, IMG.w6, IMG.k2, IMG.w8, IMG.m4] }),
+  s(8, 'lookbookGrid', 'The Lookbook', 'لُک بُک', { handle: '@fashionist.store', images: [IMG.w5, IMG.m3, IMG.w6, IMG.k2, IMG.w8, IMG.m4] }),
   s(9, 'newsletter', 'Join the Fashionist circle', 'فیشنسٹ سرکل میں شامل ہوں', { text: 'First look at new drops, private sales and styling notes.', textUr: 'نئے ڈراپس اور خصوصی سیلز سب سے پہلے۔' }),
 ];
 
@@ -108,7 +108,7 @@ export const pages = [
   ]),
   page('contact', 'Contact Us', 'رابطہ کریں', 'We are here Monday to Saturday, 10am – 8pm PKT. Call, email or message us on WhatsApp.', IMG.rack2, [
     { type: 'heading', text: 'Visit the studio', textUr: 'اسٹوڈیو' },
-    { type: 'paragraph', text: 'Gulgasht Colony, Multan, Pakistan · 0300 1234567 · hello@fashionist.pk', textUr: '' },
+    { type: 'paragraph', text: 'Gulgasht Colony, Multan, Pakistan · 0300 1234567 · hello@fashionist.store', textUr: '' },
   ]),
   page('shipping', 'Shipping', 'شپنگ', 'We deliver nationwide via trusted courier partners.', null, [
     { type: 'heading', text: 'Delivery times', textUr: 'ڈیلیوری کا وقت' },

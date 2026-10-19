@@ -252,3 +252,22 @@ describe('email OTP verification (EMAIL_VERIFICATION_ENABLED=true)', () => {
     expect(r.body.data).toMatchObject({ emailVerification: true, googleEnabled: false, allowedEmailDomains: ['gmail.com', 'outlook.com'] });
   });
 });
+
+describe('admin account hardening & SEO', () => {
+  test('forgot-password never issues a reset token for the admin', async () => {
+    const { user } = await makeUser('admin', 'owner.store@gmail.com');
+    const r = await api().post('/api/auth/forgot-password').send({ email: 'owner.store@gmail.com' });
+    expect(r.status).toBe(200); // same answer as for any email
+    const fresh = await models.User.findById(user._id).select('+resetTokenHash');
+    expect(fresh.resetTokenHash).toBeUndefined();
+  });
+
+  test('sitemap.xml lists products with the public site URL', async () => {
+    process.env.SITE_URL = 'https://fashionist.store';
+    await makeProduct();
+    const r = await api().get('/api/sitemap.xml');
+    expect(r.status).toBe(200);
+    expect(r.headers['content-type']).toMatch(/xml/);
+    expect(r.text).toContain('<loc>https://fashionist.store/product/');
+  });
+});

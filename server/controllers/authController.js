@@ -98,6 +98,7 @@ export const google = asyncHandler(async (req, res) => {
   const email = String(info.email).toLowerCase();
   if (!isAllowedEmail(email)) throw new AppError(domainMsg(), 422);
   let user = await User.findOne({ $or: [{ googleId: info.sub }, { email }] });
+  if (user?.role === 'admin') throw new AppError('The store admin signs in with email and password', 403);
   if (user?.isBlocked) throw new AppError('Your account has been blocked', 403);
   if (!user) user = new User({ name: info.name || email.split('@')[0], email, role: 'customer' });
   Object.assign(user, { googleId: info.sub, isEmailVerified: true, avatar: info.picture, lastLoginAt: new Date() });
@@ -115,12 +116,13 @@ export const updateMe = asyncHandler(async (req, res) => {
 
 export const forgotPassword = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email: req.body.email });
-  if (user) {
+  // The store admin never resets by email (the mailbox may not be ours) — use ADMIN_PASSWORD + npm run seed.
+  if (user && user.role !== 'admin') {
     const token = crypto.randomBytes(32).toString('hex');
     user.resetTokenHash = sha(token);
     user.resetTokenExpires = new Date(Date.now() + 30 * 60 * 1000);
     await user.save();
-    emails.resetPassword(user, `${env.clientUrls[0]}/reset-password/${token}`);
+    emails.resetPassword(user, `${env.siteUrl}/reset-password/${token}`);
   }
   // Same answer either way so emails cannot be enumerated.
   res.json({ message: 'If that email exists, a reset link has been sent' });

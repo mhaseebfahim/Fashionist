@@ -87,3 +87,17 @@ export const publicSettings = asyncHandler(async (_req, res) => {
   const s = await Settings.current();
   res.json({ settings: { store: s.store, shippingRates: Object.fromEntries(s.shippingRates || []), defaultShippingFee: s.defaultShippingFee, freeShippingAbove: s.freeShippingAbove, returnWindowDays: s.returnWindowDays } });
 });
+
+/** XML sitemap of every live product, category and CMS page (served at fashionist.store/sitemap.xml via Vercel rewrite). */
+export const sitemap = asyncHandler(async (_req, res) => {
+  const { env } = await import('../config/env.js');
+  const { Page } = await import('../models/Cms.js');
+  const [products, categories, pages] = await Promise.all([
+    Product.find({ isActive: true }).select('slug updatedAt').lean(),
+    Category.find({ isActive: true }).select('slug updatedAt').lean(),
+    Page.find({ isPublished: true }).select('slug updatedAt').lean(),
+  ]);
+  const url = (path, d, p = '0.7') => `<url><loc>${env.siteUrl}${path}</loc>${d ? `<lastmod>${new Date(d).toISOString().slice(0, 10)}</lastmod>` : ''}<priority>${p}</priority></url>`;
+  const body = [url('/', null, '1.0'), url('/shop', null, '0.9'), ...categories.map((c) => url(`/shop/${c.slug}`, c.updatedAt, '0.8')), ...products.map((p) => url(`/product/${p.slug}`, p.updatedAt)), ...pages.map((p) => url(`/pages/${p.slug}`, p.updatedAt, '0.4'))].join('');
+  res.set('Cache-Control', 'public, max-age=3600').type('application/xml').send(`<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${body}</urlset>`);
+});

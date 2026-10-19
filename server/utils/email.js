@@ -12,7 +12,7 @@ const smtp = () =>
     auth: { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
   }));
 
-const FROM = () => process.env.MAIL_FROM || 'Fashionist <no-reply@fashionist.pk>';
+const FROM = () => process.env.MAIL_FROM || 'Fashionist <no-reply@fashionist.store>';
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
 const wrap = (title, body) => `<!doctype html><html><body style="margin:0;background:#FAF7F2">
 <div style="max-width:560px;margin:0 auto;font-family:Georgia,serif;padding:32px;color:#141414">

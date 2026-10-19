@@ -129,7 +129,7 @@ export const coupons = [
 ];
 
 export const settings = {
-  store: { name: 'Fashionist', logo: '', phone: '0300 1234567', email: 'hello@fashionist.pk', whatsapp: '923001234567', address: 'Gulgasht Colony, Multan, Pakistan' },
+  store: { name: 'Fashionist', logo: '', phone: '0300 1234567', email: 'hello@fashionist.store', whatsapp: '923001234567', address: 'Gulgasht Colony, Multan, Pakistan' },
   shippingRates: { Multan: 150, Lahore: 200, Karachi: 250, Islamabad: 220, Rawalpindi: 220 },
   defaultShippingFee: 250,
   freeShippingAbove: 5000,

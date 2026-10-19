@@ -49,7 +49,9 @@ export function useMeta(title, description, image) {
     set('property', 'og:title', full);
     set('property', 'og:description', description);
     set('property', 'og:image', image);
-    set('property', 'og:url', window.location.href);
+    const href = window.location.origin + window.location.pathname;
+    set('property', 'og:url', href);
+    document.head.querySelector('link[rel="canonical"]')?.setAttribute('href', href);
   }, [title, description, image]);
 }
 

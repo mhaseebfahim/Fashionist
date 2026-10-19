@@ -18,7 +18,7 @@ import * as data from '../../client/src/services/mock/seedData.js';
 import { cmsDefaults } from '../../client/src/cms/defaults.js';
 
 export async function seed({ reset = false, log = console.log } = {}) {
-  const { ADMIN_EMAIL = 'admin@fashionist.pk', ADMIN_PASSWORD } = process.env;
+  const { ADMIN_EMAIL = 'admin.fashionist@gmail.com', ADMIN_PASSWORD } = process.env;
   if (!ADMIN_PASSWORD) throw new Error('Set ADMIN_PASSWORD in server/.env');
 
   if (reset) {

@@ -135,8 +135,9 @@ npm run dev:client
 | `MONGO_URI` | ✓ | `mongodb+srv://user:pass@cluster0.xxxx.mongodb.net/fashionist?retryWrites=true&w=majority` |
 | `JWT_SECRET` | ✓ | 32+ random chars: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"` |
 | `JWT_EXPIRES_IN` | – | `7d` |
-| `CLIENT_URL` | ✓ | Allowed storefront origins, comma-separated, no trailing slash: `https://fashionist.vercel.app,https://www.fashionist.pk` |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | ✓ for seed | The single store admin (seed creates/updates it; it is the only admin) |
+| `CLIENT_URL` | ✓ | Allowed storefront origins, comma-separated, no trailing slash: `http://localhost:5173,https://fashionist.store,https://www.fashionist.store` |
+| `SITE_URL` | ✓ in prod | `https://fashionist.store` — used in password-reset links and `sitemap.xml` |
+| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | ✓ for seed | The single store admin, e.g. `admin.fashionist@gmail.com` + a 12+ character password. Seed creates/updates it. For safety the admin can **not** use "Forgot password" or Google sign-in — change the password in env and run `npm run seed` |
 | `EMAIL_VERIFICATION_ENABLED` | – | `false` now. Set `true` once email delivery works (see §7) |
 | `ALLOWED_EMAIL_DOMAINS` | – | `gmail.com,outlook.com` — only these may register |
 | `EMAIL_PROVIDER` | – | `console` (log only) · `resend` · `smtp` |
@@ -248,6 +249,17 @@ Create a free account at <https://cloudinary.com> → Dashboard → copy **Cloud
 
 ---
 
+## 11b. Domain: fashionist.store
+
+| Host | Points to | Where to set it |
+| --- | --- | --- |
+| `fashionist.store` and `www.fashionist.store` | Vercel (storefront) | Vercel → Project → Settings → Domains (follow the A / CNAME records Vercel shows) |
+| `api.fashionist.store` | Render or Railway (API) | Render → Service → Settings → Custom Domains → add `api.fashionist.store`, then at your domain registrar add **CNAME `api` → `<service>.onrender.com`** (Railway: Settings → Networking → Custom Domain, CNAME to the value it shows) |
+
+Then set on the **API**: `CLIENT_URL=https://fashionist.store,https://www.fashionist.store` and `SITE_URL=https://fashionist.store`; on **Vercel**: `VITE_USE_MOCK=false`, `VITE_API_URL=https://api.fashionist.store/api` → Redeploy. (If `VITE_API_URL` is missing, the site automatically uses `https://api.fashionist.store/api` when it runs on fashionist.store.) `https://fashionist.store/sitemap.xml` is proxied by Vercel to the API's live sitemap, and `robots.txt` already points to it. For email, verify **fashionist.store** in Resend and use `MAIL_FROM=Fashionist <no-reply@fashionist.store>`.
+
+---
+
 ## 12. Backup & restore
 
 Install the [MongoDB Database Tools](https://www.mongodb.com/try/download/database-tools).
@@ -268,7 +280,7 @@ Atlas paid tiers also have automatic cloud backups.
 
 | Role | Email | Password |
 | --- | --- | --- |
-| Admin (mock mode & `dev:memory`) | `admin@fashionist.pk` | `Admin@123` (with a real DB: whatever `ADMIN_PASSWORD` is) |
+| Admin (mock mode & `dev:memory`) | `admin.fashionist@gmail.com` | `Admin@123` (with a real DB: whatever `ADMIN_EMAIL` / `ADMIN_PASSWORD` are in `server/.env`) |
 | Customer | `ayesha.fashionist@gmail.com` | `Customer@123` |
 | Customer | `hamza.fashionist@gmail.com` | `Customer@123` |
 | Customer | `sana.fashionist@outlook.com` | `Customer@123` |
@@ -357,6 +369,8 @@ npm run build && npm run check    # headless Chrome/Edge: every page + flows, fa
 | First request on Render takes ~40 s | Free instance waking up — use a paid instance for a live shop |
 | Image upload says Cloudinary not configured | Add the three `CLOUDINARY_*` vars to the API |
 | No OTP email arrives | Check `EMAIL_PROVIDER` and its keys; on Resend use a verified `MAIL_FROM` domain; check the API logs (`Email failed: …`) |
-| Locked out of admin | Set a new `ADMIN_PASSWORD` and run `npm run seed` (it resets the admin password; data is kept unless you pass `--reset`) |
+| Locked out of admin | Set a new `ADMIN_PASSWORD` in `server/.env` and run `npm run seed` (it resets the admin password; data is kept unless you pass `--reset`) |
+| `bad auth : authentication failed` | Atlas user/password in `MONGO_URI` is wrong — Atlas → Database Access → Edit user → set a new password (letters + numbers avoid URL-encoding issues) |
+| Cloudinary `api_secret mismatch` | The secret was copied while masked (`*****`). Cloudinary → Settings → API Keys → click the eye icon and copy the real secret |
 
 © 2026 Fashionist

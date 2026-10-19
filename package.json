@@ -12,5 +12,10 @@
     "test": "npm --prefix server test && npm --prefix server run smoke",
     "check": "npm --prefix client run build && npm --prefix client run check"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "cloudinary": "^2.11.0"
+  }
 }
