@@ -9,9 +9,16 @@ if (missing.length) {
 }
 if (process.env.JWT_SECRET.length < 32) console.warn('⚠ JWT_SECRET should be at least 32 random characters');
 
+// The Cloudinary SDK throws on import if CLOUDINARY_URL is malformed — ignore a bad value instead of crashing.
+if (process.env.CLOUDINARY_URL && !/^cloudinary:\/\/[^:]+:[^@]+@.+/.test(process.env.CLOUDINARY_URL.trim())) {
+  console.warn('⚠ CLOUDINARY_URL is not in the form cloudinary://<key>:<secret>@<cloud_name> — ignoring it');
+  delete process.env.CLOUDINARY_URL;
+}
+
 const { default: app } = await import('./app.js');
 const { connectDB } = await import('./config/db.js');
 const { env } = await import('./config/env.js');
+const { cloudinaryReady } = await import('./middleware/upload.js');
 
 const port = process.env.PORT || 5000;
 try {
@@ -21,7 +28,8 @@ try {
   process.exit(1);
 }
 const server = app.listen(port, () => {
-  console.log(`Fashionist API on :${port} (${env.nodeEnv}) · CORS: ${env.clientUrls.join(', ')} · email: ${env.emailProvider} · OTP verification: ${env.emailVerification ? 'ON' : 'off'}`);
+  console.log(`Fashionist API on :${port} (${env.nodeEnv}) · CORS: ${env.clientUrls.join(', ')} · email: ${env.emailProvider} · OTP verification: ${env.emailVerification ? 'ON' : 'off'} · Cloudinary: ${cloudinaryReady() ? 'ready' : 'NOT configured'}`);
+  if (process.env.EMAIL_VERIFICATION_ENABLED === 'true' && !env.emailVerification) console.warn('⚠ EMAIL_VERIFICATION_ENABLED=true but no working email provider (RESEND_API_KEY / SMTP_HOST missing) — OTP stays OFF so sign-ups keep working');
 });
 
 // Graceful shutdown for Render / Railway deploys.

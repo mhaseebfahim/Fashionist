@@ -2,10 +2,12 @@ import multer from 'multer';
 import { v2 as cloudinary } from 'cloudinary';
 import { AppError } from '../utils/AppError.js';
 
-export const cloudinaryReady = () => !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+// Either the three CLOUDINARY_* vars or a single CLOUDINARY_URL=cloudinary://<key>:<secret>@<cloud_name>
+const trio = () => !!(process.env.CLOUDINARY_CLOUD_NAME && process.env.CLOUDINARY_API_KEY && process.env.CLOUDINARY_API_SECRET);
+export const cloudinaryReady = () => trio() || /^cloudinary:\/\//.test(process.env.CLOUDINARY_URL || '');
 
-if (cloudinaryReady())
-  cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET });
+if (trio()) cloudinary.config({ cloud_name: process.env.CLOUDINARY_CLOUD_NAME, api_key: process.env.CLOUDINARY_API_KEY, api_secret: process.env.CLOUDINARY_API_SECRET, secure: true });
+else if (cloudinaryReady()) cloudinary.config({ secure: true }); // SDK reads CLOUDINARY_URL itself
 
 // Only jpg / png / webp, max 5 MB each, max 10 per request.
 export const uploadImages = multer({

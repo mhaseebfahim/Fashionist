@@ -18,7 +18,9 @@ export const env = {
   },
   /** OTP email verification on sign-up. Keep false until an email provider (Resend/SMTP) is configured. */
   get emailVerification() {
-    return bool(process.env.EMAIL_VERIFICATION_ENABLED, false);
+    // In production OTP needs a real provider — otherwise nobody could ever verify, so it stays off.
+    // In development the console provider prints the code in the API log.
+    return bool(process.env.EMAIL_VERIFICATION_ENABLED, false) && (this.emailProvider !== 'console' || !this.isProd);
   },
   /** Only these email domains may register (strict match on the part after @). */
   get allowedEmailDomains() {
@@ -27,6 +29,8 @@ export const env = {
   /** console | smtp | resend */
   get emailProvider() {
     const p = (process.env.EMAIL_PROVIDER || '').toLowerCase();
+    if (p === 'resend' && !process.env.RESEND_API_KEY) return 'console'; // key not added yet
+    if (p === 'smtp' && !process.env.SMTP_HOST) return 'console';
     if (p) return p;
     if (process.env.RESEND_API_KEY) return 'resend';
     if (process.env.SMTP_HOST) return 'smtp';

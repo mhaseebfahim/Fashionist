@@ -5,6 +5,7 @@ import mongoose from 'mongoose';
 import request from 'supertest';
 
 process.env.NODE_ENV = 'test';
+process.env.EMAIL_VERIFICATION_ENABLED = 'false'; // deterministic: ignore the local .env
 process.env.JWT_SECRET ||= 'smoke-test-secret-long-enough-0123456789abcdef';
 process.env.ADMIN_EMAIL = 'admin.fashionist@gmail.com';
 process.env.ADMIN_PASSWORD = 'Admin@12345';

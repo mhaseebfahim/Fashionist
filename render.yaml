@@ -31,16 +31,15 @@ services:
       - key: ADMIN_PASSWORD
         sync: false
       - key: EMAIL_VERIFICATION_ENABLED
-        value: "false"
+        value: "true"
       - key: ALLOWED_EMAIL_DOMAINS
         value: gmail.com,outlook.com
       - key: EMAIL_PROVIDER
-        value: console
-      # MAIL_FROM: Fashionist <no-reply@fashionist.store> (verify fashionist.store in Resend first)
+        value: resend
       - key: RESEND_API_KEY
         sync: false
       - key: MAIL_FROM
-        sync: false
+        value: Fashionist <no-reply@fashionist.store>
       - key: SMTP_HOST
         sync: false
       - key: SMTP_PORT

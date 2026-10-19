@@ -174,7 +174,7 @@ Atlas clusters are replica sets, so transactions (checkout, cancel, returns) wor
 
 ## 7. Email: OTP verification, Resend or SMTP
 
-**Today:** `EMAIL_VERIFICATION_ENABLED=false` — customers sign up and are logged in instantly (accounts are marked verified). Sign-up is still restricted to **@gmail.com** and **@outlook.com** (strict match, lower-cased, dots kept). Change the list with `ALLOWED_EMAIL_DOMAINS`.
+**Current setup:** `EMAIL_PROVIDER=resend` and `EMAIL_VERIFICATION_ENABLED=true`. **Safety switch:** in production OTP only turns on once `RESEND_API_KEY` (or `SMTP_HOST`) is present — until then sign-ups work without a code and the API logs a warning. In development without a key, emails (including the OTP code in the subject) are printed in the API console. Sign-up is still restricted to **@gmail.com** and **@outlook.com** (strict match, lower-cased, dots kept). Change the list with `ALLOWED_EMAIL_DOMAINS`.
 
 **When you are ready:**
 
@@ -209,7 +209,7 @@ Restart/redeploy the API. The flow then becomes: Register → a **6-digit code**
 
 ## 9. Cloudinary (image uploads)
 
-Create a free account at <https://cloudinary.com> → Dashboard → copy **Cloud name, API key, API secret** into the API env. Uploads (product media, CMS images, logo) go to `fashionist/<folder>` and are served with `f_auto,q_auto` (automatic WebP/AVIF + quality). Without Cloudinary you can still add images by URL in the Media Library.
+Create a free account at <https://cloudinary.com> → **Settings → API Keys** → copy **Cloud name, API key, API secret** (click the 👁 icon — never copy the masked `*****`) into the API env as `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`. *Or* use one variable `CLOUDINARY_URL=cloudinary://<api_key>:<api_secret>@<cloud_name>` (value only — do not repeat `CLOUDINARY_URL=` inside it). The API log shows `Cloudinary: ready` at start-up when it is configured. Uploads (product media, CMS images, logo) go to `fashionist/<folder>` and are served with `f_auto,q_auto` (automatic WebP/AVIF + quality). Without Cloudinary you can still add images by URL in the Media Library.
 
 ---
 

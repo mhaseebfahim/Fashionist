@@ -64,7 +64,7 @@ export default function SearchOverlay() {
               {speech.supported && (
                 <button type="button" onClick={speech.listening ? speech.stop : speech.start} aria-label="Voice search" className={`relative grid h-12 w-12 shrink-0 place-items-center rounded-full ${speech.listening ? 'bg-rose text-white' : 'border border-line'}`}>
                   {speech.listening && <span className="absolute inset-0 animate-ping rounded-full bg-rose/40" />}
-                  <Mic className="relative h-5 w-5" />
+                  <Mic className="relative h-4 w-4" />
                 </button>
               )}
             </form>
