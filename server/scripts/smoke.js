@@ -28,7 +28,7 @@ const login = async (email, password) => (await api().post('/api/auth/login').se
 try {
   // ---- storefront ----
   const cms = (await api().get('/api/cms')).body.data;
-  check('CMS bundle', cms.sections.length === 11 && cms.navigation.header.length === 7 && cms.announcement.messages.length === 3, `${cms.sections.length} sections`);
+  check('CMS bundle', cms.sections.length === 11 && cms.navigation.header.length === 6 && cms.announcement.messages.length === 3, `${cms.sections.length} sections`);
   const prods = await api().get('/api/products').query({ category: 'bottomwear', sort: 'priceAsc', limit: 48 });
   check('Bottomwear subtree (jeans+trousers+shorts)', prods.body.meta.total === 15, `${prods.body.meta.total} products`);
   const p = prods.body.data.products;

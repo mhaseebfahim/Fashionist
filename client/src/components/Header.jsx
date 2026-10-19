@@ -61,20 +61,20 @@ export default function Header() {
   const open = mega !== null && menu[mega];
   return (
     <header className={`sticky top-0 z-40 transition-colors duration-500 ${overHero ? 'bg-transparent text-ivory' : 'border-b border-line bg-bg text-fg'} ${pathname === '/' ? '-mb-[72px]' : ''}`} onMouseLeave={() => setMega(null)}>
-      <div className="container-site grid h-[72px] grid-cols-[1fr_auto_1fr] items-center">
-        <div className="flex items-center gap-6">
-          <button className={`${iconBtn} lg:hidden`} aria-label={t('nav.menu')} onClick={() => dispatch(setMenuOpen(true))}>
+      <div className="container-site grid h-[72px] grid-cols-[1fr_auto_1fr] items-center xl:grid-cols-[auto_1fr_auto] xl:gap-8">
+        <div className="flex items-center gap-6 xl:justify-center">
+          <button className={`${iconBtn} xl:hidden`} aria-label={t('nav.menu')} onClick={() => dispatch(setMenuOpen(true))}>
             <Menu className="h-5 w-5" />
           </button>
-          <nav className="hidden items-center gap-6 lg:flex" aria-label="Primary">
+          <nav className="hidden items-center gap-5 xl:flex 2xl:gap-7" aria-label="Primary">
             {menu.map((m, i) => (
-              <NavLink key={m.link + i} to={m.link} onMouseEnter={() => setMega(m.children?.length || m.image ? i : null)} onFocus={() => setMega(m.children?.length || m.image ? i : null)} className="label link-grow text-[11px]">
+              <NavLink key={m.link + i} to={m.link} onMouseEnter={() => setMega(m.children?.length || m.image ? i : null)} onFocus={() => setMega(m.children?.length || m.image ? i : null)} className="label link-grow whitespace-nowrap text-[11px]">
                 {L(m, lang)}
               </NavLink>
             ))}
           </nav>
         </div>
-        <Logo size="text-lg sm:text-xl" />
+        <div className="xl:order-first"><Logo size="text-lg sm:text-xl" /></div>
         <div className="flex items-center justify-end">
           <button className={iconBtn} aria-label={t('nav.search')} onClick={() => dispatch(setSearchOpen(true))}><Search className="h-[18px] w-[18px]" /></button>
           <button className={`${iconBtn} hidden text-xs font-semibold sm:grid`} onClick={switchLang} aria-label="Switch language">{lang === 'ur' ? 'EN' : 'اردو'}</button>
@@ -93,7 +93,7 @@ export default function Header() {
 
       <AnimatePresence>
         {open && (
-          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="absolute inset-x-0 top-full hidden border-b border-line bg-bg text-fg lg:block">
+          <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} className="absolute inset-x-0 top-full hidden border-b border-line bg-bg text-fg xl:block">
             <div className="container-site grid grid-cols-12 gap-10 py-10">
               <div className="col-span-4">
                 <p className="label mb-5 text-gold">{L(open, lang)}</p>
@@ -128,7 +128,7 @@ export default function Header() {
 
       <AnimatePresence>
         {menuOpen && (
-          <motion.div className="fixed inset-0 z-[60] bg-ink/40 lg:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => dispatch(setMenuOpen(false))}>
+          <motion.div className="fixed inset-0 z-[60] bg-ink/40 xl:hidden" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => dispatch(setMenuOpen(false))}>
             <motion.nav initial={{ x: lang === 'ur' ? '100%' : '-100%' }} animate={{ x: 0 }} exit={{ x: lang === 'ur' ? '100%' : '-100%' }} transition={{ ease: [0.22, 1, 0.36, 1], duration: 0.5 }} className="h-full w-[86%] max-w-sm overflow-auto bg-bg p-6 text-fg" onClick={(e) => e.stopPropagation()}>
               <div className="mb-10 flex items-center justify-between">
                 <Logo size="text-base" />

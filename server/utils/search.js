@@ -25,6 +25,8 @@ const RELATED = {
   'shirt': ['shirt'],
   't-shirt': ['t-shirt', 'tee'],
   jeans: ['jeans', 'denim'],
+  shorts: ['shorts'], // listed so "shorts" is not singularised to "short" (= short-sleeve)
+  boots: ['boots'],
   shoe: ['shoe', 'sneaker', 'trainer', 'boots', 'derby', 'monk', 'footwear'],
   sneaker: ['sneaker', 'trainer'],
   jacket: ['jacket', 'bomber'],
@@ -86,7 +88,10 @@ export function scoreProduct(fields, terms) {
     const s = (re.test(fields.title) ? 6 : 0) + (re.test(fields.category) ? 4 : 0) + (re.test(fields.other) ? 1 : 0);
     if (!s) return 0;
     // Bonus when the title has the exact word, not just a fragment
-    score += s + (new RegExp(`\\b(${alts.map(escapeRe).join('|')})\\b`, 'i').test(fields.title) ? 3 : 0);
+    score += s + (new RegExp(`\\b(${alts.map(escapeRe).join('|')})(e?s)?\\b`, 'i').test(fields.title) ? 3 : 0);
+    // The word the shopper meant beats its relatives: "pant" → Pants first, then chinos, then jeans.
+    const first = alts.findIndex((a) => termRegex([a]).test(fields.title) || termRegex([a]).test(fields.category));
+    if (first >= 0) score += Math.max(0, 3 - first);
   }
   return score;
 }

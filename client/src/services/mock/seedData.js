@@ -17,7 +17,7 @@ export const IMG = {
   // hoodies & sweatshirts
   hoodie: u('1556821840-3a63f95609a7'), sweatWhite: u('1620799140408-edc6dcb6d633'), sweatBlack: u('1578681994506-b8f463449011'), sweatNavy: u('1614975059251-992f11792b9f'), hoodieRose: u('1516826957135-700dedea698c'),
   // jeans, trousers, shorts
-  jeans1: u('1542272604-787c3835535d'), jeans2: u('1541099649105-f69ad21f3246'), jeans3: u('1604176354204-9268737828e4'), jeans4: u('1565084888279-aca607ecce0c'), jeans5: u('1582552938357-32b906df40cb'), jeans6: u('1555689502-c4b22d76c56f'),
+  jeans1: u('1542272604-787c3835535d'), jeans3: u('1604176354204-9268737828e4'), jeans4: u('1565084888279-aca607ecce0c'), jeans5: u('1582552938357-32b906df40cb'), jeans6: u('1555689502-c4b22d76c56f'),
   trouser: u('1624378439575-d8705ad7ae80'), chino: u('1473966968600-fa801b869a1a'), chinoLook: u('1488161628813-04466f872be2'), shorts1: u('1506629082955-511b1aa562c8'), shorts2: u('1617952236317-0bd127407984'),
   // jackets
   bomber: u('1591047139829-d91aecb6caea'), leather: u('1551028719-00167b16eac5'), leatherMan: u('1520975954732-35dd22299614'), brownJacket: u('1614252369475-531eba835eb1'), denimJacket: u('1611312449408-fcece27cdbb7'), suede: u('1617114919297-3c8ddb01f599'),
@@ -40,15 +40,15 @@ export const slugify = (s) => String(s).toLowerCase().trim().replace(/&/g, 'and'
 export const categories = [
   { slug: 'topwear', name: 'Topwear', nameUr: 'ٹاپ ویئر', image: IMG.tee4, sortOrder: 1, parent: null },
   { slug: 'bottomwear', name: 'Bottomwear', nameUr: 'باٹم ویئر', image: IMG.jeans6, sortOrder: 2, parent: null },
-  { slug: 'jackets', name: 'Jackets', nameUr: 'جیکٹس', image: IMG.leatherMan, sortOrder: 3, parent: null },
-  { slug: 'suits-blazers', name: 'Suits & Blazers', nameUr: 'سوٹس اور بلیزرز', image: IMG.suitCheck, sortOrder: 4, parent: null },
-  { slug: 'footwear', name: 'Footwear', nameUr: 'جوتے', image: IMG.sneaker1, sortOrder: 5, parent: null },
-  { slug: 'accessories', name: 'Accessories', nameUr: 'لوازمات', image: IMG.watch1, sortOrder: 6, parent: null },
+  { slug: 'suits-blazers', name: 'Suits & Blazers', nameUr: 'سوٹس اور بلیزرز', image: IMG.suitCheck, sortOrder: 3, parent: null },
+  { slug: 'footwear', name: 'Footwear', nameUr: 'جوتے', image: IMG.sneaker1, sortOrder: 4, parent: null },
+  { slug: 'accessories', name: 'Accessories', nameUr: 'لوازمات', image: IMG.watch1, sortOrder: 5, parent: null },
   { slug: 't-shirts', name: 'T-Shirts', nameUr: 'ٹی شرٹس', image: IMG.tee1, sortOrder: 1, parent: 'topwear' },
   { slug: 'polo-shirts', name: 'Polo Shirts', nameUr: 'پولو شرٹس', image: IMG.polo, sortOrder: 2, parent: 'topwear' },
   { slug: 'casual-shirts', name: 'Casual Shirts', nameUr: 'کیژول شرٹس', image: IMG.flannel, sortOrder: 3, parent: 'topwear' },
   { slug: 'formal-shirts', name: 'Formal Shirts', nameUr: 'فارمل شرٹس', image: IMG.shirtTie, sortOrder: 4, parent: 'topwear' },
   { slug: 'hoodies-sweatshirts', name: 'Hoodies & Sweatshirts', nameUr: 'ہوڈیز اور سویٹ شرٹس', image: IMG.hoodie, sortOrder: 5, parent: 'topwear' },
+  { slug: 'jackets', name: 'Jackets', nameUr: 'جیکٹس', image: IMG.leatherMan, sortOrder: 6, parent: 'topwear' },
   { slug: 'jeans', name: 'Jeans', nameUr: 'جینز', image: IMG.jeans1, sortOrder: 1, parent: 'bottomwear' },
   { slug: 'trousers-chinos', name: 'Trousers & Chinos', nameUr: 'ٹراؤزرز اور چینوز', image: IMG.chino, sortOrder: 2, parent: 'bottomwear' },
   { slug: 'shorts', name: 'Shorts', nameUr: 'شارٹس', image: IMG.shorts2, sortOrder: 3, parent: 'bottomwear' },
@@ -101,11 +101,11 @@ const P = [
   ['Garment-Dyed Hoodie', 'گارمنٹ ڈائیڈ ہوڈی', 'hoodies-sweatshirts', 4290, 0, { fabric: 'French Terry', fit: 'Oversized', sleeve: 'Full', occasion: 'Casual' }, ['Pink', 'Grey'], 'T', ['new', 'streetwear'], ['hoodieRose', 'hoodie']],
   // ---- Jeans ----
   ['Slim Fit Stretch Jeans', 'سلم فٹ اسٹریچ جینز', 'jeans', 4490, 5290, { fabric: 'Stretch Denim', fit: 'Slim', occasion: 'Casual' }, ['Indigo', 'Black'], 'W', ['denim', 'new', 'sale'], ['jeans1', 'jeans3'], true],
-  ['Ripped Skinny Jeans', 'رپڈ اسکنی جینز', 'jeans', 4290, 0, { fabric: 'Stretch Denim', fit: 'Skinny', occasion: 'Casual' }, ['Light Blue'], 'W', ['denim', 'streetwear'], ['jeans2', 'jeans5']],
+  ['Ripped Skinny Jeans', 'رپڈ اسکنی جینز', 'jeans', 4290, 0, { fabric: 'Stretch Denim', fit: 'Skinny', occasion: 'Casual' }, ['Light Blue'], 'W', ['denim', 'streetwear'], ['jeans5', 'jeans6']],
   ['Straight Fit Selvedge Jeans', 'سٹریٹ فٹ سیلوج جینز', 'jeans', 5990, 0, { fabric: 'Selvedge Denim', fit: 'Straight', occasion: 'Casual' }, ['Indigo'], 'W', ['denim', 'premium'], ['jeans4', 'jeans1']],
   ['Tapered Washed Jeans', 'ٹیپرڈ واشڈ جینز', 'jeans', 4790, 0, { fabric: 'Denim', fit: 'Tapered', occasion: 'Casual' }, ['Blue'], 'W', ['denim', 'new'], ['jeans6', 'jeans3']],
   ['Relaxed Fit Light Wash Jeans', 'ریلیکسڈ فٹ لائٹ واش جینز', 'jeans', 4590, 0, { fabric: 'Denim', fit: 'Relaxed', occasion: 'Casual' }, ['Light Blue'], 'W', ['denim'], ['jeans5', 'jeans4']],
-  ['Black Distressed Jeans', 'بلیک ڈسٹریسڈ جینز', 'jeans', 4390, 4990, { fabric: 'Stretch Denim', fit: 'Slim', occasion: 'Casual' }, ['Black'], 'W', ['denim', 'sale', 'streetwear'], ['jeans3', 'jeans2']],
+  ['Black Distressed Jeans', 'بلیک ڈسٹریسڈ جینز', 'jeans', 4390, 4990, { fabric: 'Stretch Denim', fit: 'Slim', occasion: 'Casual' }, ['Black'], 'W', ['denim', 'sale', 'streetwear'], ['jeans3', 'jeans1']],
   // ---- Trousers & chinos ----
   ['Slim Stretch Chinos', 'سلم اسٹریچ چینوز', 'trousers-chinos', 3490, 0, { fabric: 'Cotton Twill', fit: 'Slim', occasion: 'Smart Casual' }, ['Khaki', 'Navy', 'Black'], 'W', ['new', 'basics'], ['chino', 'chinoLook'], true],
   ['Wool-Blend Formal Trousers', 'وول بلینڈ فارمل ٹراؤزر', 'trousers-chinos', 4490, 0, { fabric: 'Wool Blend', fit: 'Slim', occasion: 'Formal' }, ['Charcoal', 'Black'], 'W', ['office'], ['trouser', 'flatlay']],

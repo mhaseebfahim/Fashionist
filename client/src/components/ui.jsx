@@ -60,7 +60,8 @@ export function Img({ src, alt = '', className = '', imgClass = '', eager = fals
   const [loaded, setLoaded] = useState(false);
   const [failed, setFailed] = useState(false);
   return (
-    <div className={`relative overflow-hidden bg-surface ${className}`}>
+    // Callers that position the wrapper themselves (absolute inset-0) must not get `relative`, which would win in Tailwind's order.
+    <div className={`${/\b(absolute|fixed)\b/.test(className) ? '' : 'relative'} overflow-hidden bg-surface ${className}`}>
       {failed || !src ? (
         <div className="absolute inset-0 grid place-items-center">
           <Diamond className="h-6 w-6 opacity-40" />
