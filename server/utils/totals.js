@@ -23,9 +23,29 @@ export function couponError(coupon, userId, subtotal, now = new Date()) {
   return null;
 }
 
-export function computeTotals({ lines, coupon, city, settings }) {
+/** Same-day has its own flat fee (a premium local service, so the free-delivery threshold does not apply). */
+export function deliveryFeeFor(city, settings, subtotal, method = 'standard') {
+  return method === 'same_day' ? settings.sameDay?.fee ?? 0 : shippingFeeFor(city, settings, subtotal);
+}
+
+export function computeTotals({ lines, coupon, city, settings, deliveryMethod = 'standard' }) {
   const subtotal = lines.reduce((s, l) => s + l.price * l.qty, 0);
   const discount = couponDiscount(coupon, subtotal);
-  const shippingFee = coupon?.type === 'freeship' ? 0 : shippingFeeFor(city, settings, subtotal - discount);
+  const shippingFee = coupon?.type === 'freeship' ? 0 : deliveryFeeFor(city, settings, subtotal - discount, deliveryMethod);
   return { subtotal, discount, shippingFee, total: subtotal - discount + shippingFee };
+}
+
+/* ---- Local same-day delivery (e.g. Multan, where the store is) ---- */
+export const DELIVERY_METHODS = ['standard', 'same_day'];
+export const RIDER_VEHICLES = ['Bike', 'Rickshaw', 'Courier'];
+const sameCity = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
+
+/** Current hour (0–23) in Pakistan time, whatever timezone the server runs in. */
+export const pkHour = (d = new Date()) => +new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Asia/Karachi' }).format(d);
+
+/** Whether same-day delivery is offered to `city`, and whether an order placed now arrives today or tomorrow. */
+export function sameDayFor(city, settings, now = new Date()) {
+  const sd = settings?.sameDay;
+  if (!sd?.enabled || !sameCity(city, sd.city)) return { available: false };
+  return { available: true, eta: pkHour(now) < (sd.cutoffHour ?? 15) ? 'today' : 'tomorrow' };
 }

@@ -11,6 +11,8 @@ function orderFilter(q) {
   const filter = {};
   if (q.status && ORDER_STATUSES.includes(q.status)) filter.status = q.status;
   if (q.city) filter['shippingAddress.city'] = q.city;
+  if (q.delivery === 'same_day') filter.deliveryMethod = 'same_day';
+  if (q.delivery === 'standard') filter.deliveryMethod = { $ne: 'same_day' }; // older orders have no method
   if (q.q) {
     const re = new RegExp(escapeRegex(q.q), 'i');
     filter.$or = [{ orderNumber: re }, { 'shippingAddress.phone': re }, { 'shippingAddress.name': re }];
@@ -38,7 +40,7 @@ export const listOrders = asyncHandler(async (req, res) => {
 
 export const exportOrders = asyncHandler(async (req, res) => {
   const orders = await Order.find(orderFilter(req.query)).sort('-createdAt').lean();
-  const fields = ['orderNumber', 'createdAt', 'status', 'paymentStatus', 'shippingAddress.name', 'shippingAddress.phone', 'shippingAddress.city', 'subtotal', 'discount', 'shippingFee', 'total', 'courier', 'trackingNumber'];
+  const fields = ['orderNumber', 'createdAt', 'status', 'paymentStatus', 'shippingAddress.name', 'shippingAddress.phone', 'shippingAddress.city', 'deliveryMethod', 'subtotal', 'discount', 'shippingFee', 'total', 'courier', 'trackingNumber'];
   res.header('Content-Type', 'text/csv').attachment('fashionist-orders.csv').send(new Parser({ fields }).parse(orders));
 });
 

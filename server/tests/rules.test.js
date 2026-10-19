@@ -46,3 +46,14 @@ test('CMS sanitiser strips scripts and javascript: links', () => {
 test('CSV parser handles quotes and CRLF', () => {
   expect(parseCsv('title,price\r\n"Lawn, 3pc",4990\r\n')).toEqual([{ title: 'Lawn, 3pc', price: '4990' }]);
 });
+
+test('same-day is offered only in its city, and the cut-off decides today vs tomorrow (PKT)', async () => {
+  const { sameDayFor, pkHour } = await import('../utils/totals.js');
+  const s = { sameDay: { enabled: true, city: 'Multan', cutoffHour: 15 } };
+  const at = (utcHour) => new Date(Date.UTC(2026, 9, 19, utcHour)); // PKT = UTC+5
+  expect(pkHour(at(9))).toBe(14);
+  expect(sameDayFor(' multan ', s, at(9))).toEqual({ available: true, eta: 'today' });
+  expect(sameDayFor('Multan', s, at(10))).toEqual({ available: true, eta: 'tomorrow' });
+  expect(sameDayFor('Lahore', s, at(9)).available).toBe(false);
+  expect(sameDayFor('Multan', { sameDay: { ...s.sameDay, enabled: false } }).available).toBe(false);
+});

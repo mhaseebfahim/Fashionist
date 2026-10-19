@@ -83,9 +83,12 @@ export const createReview = asyncHandler(async (req, res) => {
   res.status(201).json({ review });
 });
 
+// Riders' names and numbers are internal — the storefront only learns the offer itself.
+const publicSameDay = ({ enabled, city, fee, cutoffHour } = {}) => ({ enabled: !!enabled, city, fee, cutoffHour });
+
 export const publicSettings = asyncHandler(async (_req, res) => {
   const s = await Settings.current();
-  res.json({ settings: { store: s.store, shippingRates: Object.fromEntries(s.shippingRates || []), defaultShippingFee: s.defaultShippingFee, freeShippingAbove: s.freeShippingAbove, returnWindowDays: s.returnWindowDays } });
+  res.json({ settings: { store: s.store, shippingRates: Object.fromEntries(s.shippingRates || []), defaultShippingFee: s.defaultShippingFee, freeShippingAbove: s.freeShippingAbove, returnWindowDays: s.returnWindowDays, sameDay: publicSameDay(s.sameDay) } });
 });
 
 /** XML sitemap of every live product, category and CMS page (served at fashionist.store/sitemap.xml via Vercel rewrite). */

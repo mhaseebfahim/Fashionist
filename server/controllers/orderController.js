@@ -5,7 +5,7 @@ import Coupon from '../models/Coupon.js';
 import Cart from '../models/Cart.js';
 import Settings from '../models/Settings.js';
 import { AppError, asyncHandler } from '../utils/AppError.js';
-import { MAX_QTY_PER_VARIANT, computeTotals, couponDiscount, couponError, shippingFeeFor } from '../utils/totals.js';
+import { MAX_QTY_PER_VARIANT, computeTotals, couponDiscount, couponError, deliveryFeeFor, sameDayFor } from '../utils/totals.js';
 import { canTransition, isWithinReturnWindow, RESTOCK_STATUSES } from '../utils/orderStatus.js';
 import { generateOrderNumber } from '../utils/orderNumber.js';
 import { emails } from '../utils/email.js';
@@ -17,9 +17,15 @@ const restoreStock = (order, session) =>
  * Applies a status transition with every server rule. Used by admin actions and customer cancel.
  * Cancelled / Returned restore stock inside a transaction.
  */
-export async function changeStatus(order, to, { by, note, courier, trackingNumber } = {}) {
+export async function changeStatus(order, to, { by, note, courier, trackingNumber, rider } = {}) {
   if (!canTransition(order.status, to)) throw new AppError(`Cannot move order from ${order.status} to ${to}`, 400);
-  if (to === 'Shipped') {
+  if (to === 'Shipped' && order.deliveryMethod === 'same_day') {
+    // Local same-day orders go out with one of the store's riders; their number doubles as the "tracking" contact.
+    if (!rider?.name || !rider?.phone) throw new AppError('Choose a rider to send this same-day order', 400);
+    order.rider = { name: rider.name, phone: rider.phone, vehicle: rider.vehicle || 'Bike' };
+    order.courier = `${order.rider.vehicle} rider · ${rider.name}`;
+    order.trackingNumber = rider.phone;
+  } else if (to === 'Shipped') {
     if (!courier || !trackingNumber) throw new AppError('Courier and tracking number are required to ship', 400);
     order.courier = courier;
     order.trackingNumber = trackingNumber;
@@ -45,13 +51,16 @@ export async function changeStatus(order, to, { by, note, courier, trackingNumbe
 }
 
 export const createOrder = asyncHandler(async (req, res) => {
-  const { items = [], shippingAddress, couponCode } = req.body;
+  const { items = [], shippingAddress, couponCode, deliveryMethod = 'standard' } = req.body;
   // Merge duplicate SKUs; client prices are ignored entirely.
   const qtyBySku = new Map();
   for (const i of items) qtyBySku.set(i.sku, (qtyBySku.get(i.sku) || 0) + Number(i.qty));
   for (const [sku, qty] of qtyBySku) if (qty > MAX_QTY_PER_VARIANT) throw new AppError(`Max ${MAX_QTY_PER_VARIANT} units per item (${sku})`, 400);
 
   const settings = await Settings.current();
+  const sameDay = sameDayFor(shippingAddress.city, settings);
+  if (deliveryMethod === 'same_day' && !sameDay.available)
+    throw new AppError(settings.sameDay?.enabled ? `Same-day delivery is only available in ${settings.sameDay.city}` : 'Same-day delivery is currently unavailable', 400);
   const session = await mongoose.startSession();
   let order;
   try {
@@ -80,7 +89,7 @@ export const createOrder = asyncHandler(async (req, res) => {
         );
         if (!r.modifiedCount) throw new AppError('Coupon can no longer be used', 400);
       }
-      const totals = computeTotals({ lines, coupon, city: shippingAddress.city, settings });
+      const totals = computeTotals({ lines, coupon, city: shippingAddress.city, settings, deliveryMethod });
       [order] = await Order.create(
         [
           {
@@ -89,8 +98,10 @@ export const createOrder = asyncHandler(async (req, res) => {
             items: lines,
             shippingAddress: (({ name, phone, city, area, street }) => ({ name, phone, city, area, street }))(shippingAddress),
             ...totals,
+            deliveryMethod,
+            sameDayEta: deliveryMethod === 'same_day' ? sameDay.eta : undefined,
             coupon: coupon ? { code: coupon.code, amount: totals.discount } : undefined,
-            statusHistory: [{ status: 'Pending', by: req.user._id }],
+            statusHistory: [{ status: 'Pending', by: req.user._id, note: deliveryMethod === 'same_day' ? `Same-day delivery (${sameDay.eta})` : undefined }],
           },
         ],
         { session }
@@ -105,14 +116,14 @@ export const createOrder = asyncHandler(async (req, res) => {
 });
 
 export const validateCoupon = asyncHandler(async (req, res) => {
-  const { code, subtotal, city } = req.body;
+  const { code, subtotal, city, deliveryMethod } = req.body;
   const coupon = await Coupon.findOne({ code: String(code).toUpperCase() });
   const err = couponError(coupon, req.user._id, +subtotal);
   if (err) throw new AppError(err, 400);
   const discount = couponDiscount(coupon, +subtotal);
   const settings = await Settings.current();
   const freeShipping = coupon.type === 'freeship';
-  res.json({ code: coupon.code, type: coupon.type, discount, freeShipping, shippingFee: freeShipping ? 0 : shippingFeeFor(city, settings, +subtotal - discount) });
+  res.json({ code: coupon.code, type: coupon.type, discount, freeShipping, shippingFee: freeShipping ? 0 : deliveryFeeFor(city, settings, +subtotal - discount, sameDayFor(city, settings).available ? deliveryMethod : 'standard') });
 });
 
 export const myOrders = asyncHandler(async (req, res) => {

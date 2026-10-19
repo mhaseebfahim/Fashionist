@@ -271,3 +271,51 @@ describe('admin account hardening & SEO', () => {
     expect(r.text).toContain('<loc>https://fashionist.store/product/');
   });
 });
+
+describe('Multan same-day delivery', () => {
+  let admin;
+  const multan = { ...address, city: 'Multan', area: 'Gulgasht' };
+  beforeAll(async () => {
+    admin = await makeUser('admin');
+    const r = await api().put('/api/admin/settings').set(admin.auth).send({ sameDay: { enabled: true, city: 'Multan', fee: 300, cutoffHour: 23, riders: [{ name: 'Imran Bike', phone: '03011234567', vehicle: 'Bike' }] } });
+    expect(r.status).toBe(200);
+    expect(r.body.data.settings.sameDay.riders).toHaveLength(1);
+  });
+  const order = async (shippingAddress, deliveryMethod) => {
+    const c = await makeUser();
+    const { sku } = await makeProduct({ price: 6000 }); // above free-shipping: same-day fee still applies
+    return api().post('/api/orders').set(c.auth).send({ items: [{ sku, qty: 1 }], shippingAddress, deliveryMethod });
+  };
+
+  test('public settings show the offer but never the riders', async () => {
+    const r = await api().get('/api/settings/public');
+    expect(r.body.data.settings.sameDay).toMatchObject({ enabled: true, city: 'Multan', fee: 300 });
+    expect(r.body.data.settings.sameDay.riders).toBeUndefined();
+  });
+
+  test('a Multan order can be same-day with its own fee; other cities are refused', async () => {
+    const ok = await order(multan, 'same_day');
+    expect(ok.status).toBe(201);
+    expect(ok.body.data.order).toMatchObject({ deliveryMethod: 'same_day', shippingFee: 300, total: 6300 });
+    expect(['today', 'tomorrow']).toContain(ok.body.data.order.sameDayEta);
+    expect((await order(address, 'same_day')).status).toBe(400);
+    const std = await order(multan);
+    expect(std.body.data.order).toMatchObject({ deliveryMethod: 'standard', shippingFee: 0 });
+  });
+
+  test('same-day ships only with a rider; turning the service off blocks new same-day orders', async () => {
+    const { body } = await order(multan, 'same_day');
+    const s = (b) => api().patch(`/api/admin/orders/${body.data.order._id}/status`).set(admin.auth).send(b);
+    await s({ status: 'Confirmed' });
+    expect((await s({ status: 'Shipped', courier: 'TCS', trackingNumber: 'X1' })).status).toBe(400);
+    expect((await s({ status: 'Shipped', rider: { name: 'Imran Bike', phone: '123' } })).status).toBe(422);
+    const shipped = await s({ status: 'Shipped', rider: { name: 'Imran Bike', phone: '03011234567', vehicle: 'Bike' } });
+    expect(shipped.status).toBe(200);
+    expect(shipped.body.data.order.rider).toMatchObject({ name: 'Imran Bike', phone: '03011234567' });
+    expect((await api().get('/api/admin/orders?delivery=same_day').set(admin.auth)).body.data.orders.every((o) => o.deliveryMethod === 'same_day')).toBe(true);
+
+    await api().put('/api/admin/settings').set(admin.auth).send({ sameDay: { enabled: false } });
+    expect((await order(multan, 'same_day')).status).toBe(400);
+    await api().put('/api/admin/settings').set(admin.auth).send({ sameDay: { enabled: true } });
+  });
+});

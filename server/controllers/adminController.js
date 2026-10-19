@@ -53,12 +53,12 @@ export const dashboard = asyncHandler(async (req, res) => {
 export const notifications = asyncHandler(async (_req, res) => {
   const { lowStockLevel } = await Settings.current();
   const [pending, returns, low] = await Promise.all([
-    Order.find({ status: 'Pending' }).sort('-createdAt').limit(5).select('orderNumber total createdAt'),
+    Order.find({ status: 'Pending' }).sort('-createdAt').limit(5).select('orderNumber total createdAt deliveryMethod'),
     Order.find({ 'returnRequest.status': 'Requested' }).sort('-returnRequest.requestedAt').limit(5).select('orderNumber returnRequest'),
     lowStockRows(lowStockLevel, 5),
   ]);
   const items = [
-    ...pending.map((o) => ({ type: 'order', title: `New order ${o.orderNumber}`, text: `PKR ${o.total.toLocaleString()}`, link: `/admin/orders?open=${o._id}`, at: o.createdAt })),
+    ...pending.map((o) => ({ type: 'order', title: `${o.deliveryMethod === 'same_day' ? '⚡ Same-day order' : 'New order'} ${o.orderNumber}`, text: `PKR ${o.total.toLocaleString()}`, link: `/admin/orders?open=${o._id}`, at: o.createdAt })),
     ...returns.map((o) => ({ type: 'return', title: `Return requested — ${o.orderNumber}`, text: o.returnRequest.reason, link: '/admin/returns', at: o.returnRequest.requestedAt })),
     ...low.map((r) => ({ type: 'stock', title: `Low stock: ${r.sku}`, text: `${r.title} — ${r.stock} left`, link: '/admin/inventory?low=true', at: null })),
   ];
@@ -340,8 +340,13 @@ export const setReviewStatus = asyncHandler(async (req, res) => {
 export const getSettings = asyncHandler(async (_req, res) => res.json({ settings: await Settings.current() }));
 export const updateSettings = asyncHandler(async (req, res) => {
   const settings = await Settings.current();
-  const { store, shippingRates, emailNotifications, ...rest } = req.body;
+  const { store, shippingRates, emailNotifications, sameDay, ...rest } = req.body;
   if (store) settings.store = { ...settings.store.toObject(), ...store };
+  if (sameDay) {
+    const { riders, ...opts } = sameDay;
+    for (const k of ['enabled', 'city', 'fee', 'cutoffHour']) if (opts[k] !== undefined) settings.set(`sameDay.${k}`, opts[k]);
+    if (riders) settings.sameDay.riders = riders.map(({ name, phone, vehicle, isActive }) => ({ name, phone, vehicle, isActive }));
+  }
   if (shippingRates) settings.shippingRates = shippingRates;
   if (emailNotifications) settings.emailNotifications = { ...settings.emailNotifications.toObject(), ...emailNotifications };
   for (const k of ['defaultShippingFee', 'freeShippingAbove', 'lowStockLevel', 'returnWindowDays']) if (rest[k] !== undefined) settings[k] = rest[k];

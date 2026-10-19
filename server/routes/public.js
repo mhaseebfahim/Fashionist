@@ -8,6 +8,7 @@ import * as catalog from '../controllers/catalogController.js';
 import * as cart from '../controllers/cartController.js';
 import * as orders from '../controllers/orderController.js';
 import * as cms from '../controllers/cmsController.js';
+import { DELIVERY_METHODS } from '../utils/totals.js';
 
 const PHONE = /^03\d{9}$/;
 const limiter = (limit) =>
@@ -63,9 +64,9 @@ export const shopRoutes = Router()
 /* ---- /api/orders ---- */
 export const orderRoutes = Router()
   .use(protect)
-  .post('/', validate([body('items').isArray({ min: 1, max: 30 }).withMessage('Your cart is empty'), body('items.*.sku').isString().trim().notEmpty(), body('items.*.qty').isInt({ min: 1, max: 10 }).withMessage('Quantity must be 1–10'), ...address('shippingAddress.'), body('couponCode').optional({ values: 'falsy' }).isString().isLength({ max: 30 })]), orders.createOrder)
+  .post('/', validate([body('items').isArray({ min: 1, max: 30 }).withMessage('Your cart is empty'), body('items.*.sku').isString().trim().notEmpty(), body('items.*.qty').isInt({ min: 1, max: 10 }).withMessage('Quantity must be 1–10'), ...address('shippingAddress.'), body('couponCode').optional({ values: 'falsy' }).isString().isLength({ max: 30 }), body('deliveryMethod').optional().isIn(DELIVERY_METHODS)]), orders.createOrder)
   .get('/my', orders.myOrders)
-  .post('/validate-coupon', validate([body('code').isString().trim().notEmpty(), body('subtotal').isFloat({ min: 0 }), body('city').optional().isString()]), orders.validateCoupon)
+  .post('/validate-coupon', validate([body('code').isString().trim().notEmpty(), body('subtotal').isFloat({ min: 0 }), body('city').optional().isString(), body('deliveryMethod').optional().isIn(DELIVERY_METHODS)]), orders.validateCoupon)
   .get('/:id', orders.getMyOrder)
   .post('/:id/cancel', orders.cancelMyOrder)
   .post('/:id/return', validate([body('type').isIn(['return', 'exchange']), body('reason').trim().isLength({ min: 5, max: 500 })]), orders.requestReturn);

@@ -8,8 +8,15 @@ import * as o from '../controllers/adminOrderController.js';
 import * as r from '../controllers/reportController.js';
 import * as cms from '../controllers/cmsController.js';
 import { SECTION_TYPES } from '../models/Cms.js';
+import { RIDER_VEHICLES } from '../utils/totals.js';
 
+const PHONE = /^03\d{9}$/;
 const id = (n = 'id') => param(n).isMongoId().withMessage('Invalid id');
+const rider = (p) => [
+  body(`${p}name`).optional().isString().trim().isLength({ min: 2, max: 60 }).withMessage('Rider name: 2–60 characters'),
+  body(`${p}phone`).optional().isString().trim().matches(PHONE).withMessage('Rider mobile must be 03XXXXXXXXX'),
+  body(`${p}vehicle`).optional().isIn(RIDER_VEHICLES),
+];
 const v = (...chains) => validate(chains);
 const hex = (f) => body(f).optional().matches(/^#[0-9a-fA-F]{6}$/).withMessage(`${f} must be a hex colour`);
 const product = (partial) => {
@@ -74,7 +81,7 @@ export default Router()
   .post('/orders/bulk-status', v(body('ids').isArray({ min: 1, max: 200 }), body('ids.*').isMongoId(), body('status').isIn(['Confirmed', 'Shipped', 'Delivered', 'Cancelled']), body('note').optional().isString().isLength({ max: 300 })), o.bulkStatus)
   .get('/orders/:id', v(id()), o.getOrder)
   .get('/orders/:id/invoice', v(id()), o.invoice)
-  .patch('/orders/:id/status', v(id(), body('status').isIn(['Confirmed', 'Shipped', 'Delivered', 'Cancelled']), body('courier').optional().isString().isLength({ max: 40 }), body('trackingNumber').optional().isString().isLength({ max: 60 }), body('note').optional().isString().isLength({ max: 300 })), o.updateStatus)
+  .patch('/orders/:id/status', v(id(), body('status').isIn(['Confirmed', 'Shipped', 'Delivered', 'Cancelled']), body('courier').optional().isString().isLength({ max: 40 }), body('trackingNumber').optional().isString().isLength({ max: 60 }), body('note').optional().isString().isLength({ max: 300 }), body('rider').optional().isObject(), ...rider('rider.')), o.updateStatus)
   .get('/returns', o.listReturns)
   .patch('/returns/:id', v(id(), body('decision').isIn(['Approved', 'Rejected']), body('note').optional().isString().isLength({ max: 300 })), o.decideReturn)
   // customers, coupons, reviews
@@ -91,7 +98,7 @@ export default Router()
   .get('/reports', r.reports)
   .get('/reports/export', r.exportReport)
   .get('/settings', a.getSettings)
-  .put('/settings', v(body('store').optional().isObject(), body('store.email').optional({ values: 'falsy' }).isEmail(), body('shippingRates').optional().isObject(), body('shippingRates.*').optional().isFloat({ min: 0 }), body('defaultShippingFee').optional().isFloat({ min: 0 }), body('freeShippingAbove').optional().isFloat({ min: 0 }), body('lowStockLevel').optional().isInt({ min: 0 }), body('returnWindowDays').optional().isInt({ min: 0, max: 60 }), body('emailNotifications').optional().isObject()), a.updateSettings)
+  .put('/settings', v(body('store').optional().isObject(), body('store.email').optional({ values: 'falsy' }).isEmail(), body('shippingRates').optional().isObject(), body('shippingRates.*').optional().isFloat({ min: 0 }), body('defaultShippingFee').optional().isFloat({ min: 0 }), body('freeShippingAbove').optional().isFloat({ min: 0 }), body('lowStockLevel').optional().isInt({ min: 0 }), body('returnWindowDays').optional().isInt({ min: 0, max: 60 }), body('emailNotifications').optional().isObject(), body('sameDay').optional().isObject(), body('sameDay.enabled').optional().isBoolean(), body('sameDay.city').optional().isString().trim().isLength({ min: 2, max: 60 }).withMessage('Same-day city is required'), body('sameDay.fee').optional().isFloat({ min: 0 }), body('sameDay.cutoffHour').optional().isInt({ min: 0, max: 23 }), body('sameDay.riders').optional().isArray({ max: 50 }), body('sameDay.riders.*.name').isString().trim().isLength({ min: 2, max: 60 }).withMessage('Rider name: 2–60 characters'), body('sameDay.riders.*.phone').isString().trim().matches(PHONE).withMessage('Rider mobile must be 03XXXXXXXXX'), body('sameDay.riders.*.vehicle').optional().isIn(RIDER_VEHICLES), body('sameDay.riders.*.isActive').optional().isBoolean()), a.updateSettings)
   .get('/activity', a.activity)
   // media
   .get('/media', a.listMedia)
