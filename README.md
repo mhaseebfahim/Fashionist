@@ -374,3 +374,6 @@ npm run build && npm run check    # headless Chrome/Edge: every page + flows, fa
 | Cloudinary `api_secret mismatch` | The secret was copied while masked (`*****`). Cloudinary → Settings → API Keys → click the eye icon and copy the real secret |
 
 © 2026 Fashionist
+# fashionist
+# fashionist
+# fashionist

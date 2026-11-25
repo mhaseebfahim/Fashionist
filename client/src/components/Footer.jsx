@@ -21,7 +21,7 @@ export default function Footer() {
         <div className="grid gap-12 md:grid-cols-12">
           <div className="md:col-span-4">
             <Logo size="text-2xl" />
-            <p className="mt-5 font-display text-3xl italic text-ivory/80">{t('brand.tagline')}</p>
+            <p className="mt-4 font-display text-3xl italic text-ivory/80">{t('brand.tagline')}</p>
             <span className="label mt-8 inline-flex items-center gap-2 border border-gold/60 px-4 py-2 text-[10px] text-gold">◆ Cash on Delivery</span>
           </div>
           <div className="grid grid-cols-2 gap-10 md:col-span-8 md:grid-cols-4">
