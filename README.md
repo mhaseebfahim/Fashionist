@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # ◆ FASHIONIST — *Wear Your Story*
 
 **Fashionist** is a single-store fashion e-commerce website for Pakistan. One store owner (the **admin**) runs everything from the **Fashionist Atelier** console; customers browse in **English or Urdu (RTL)** and pay **Cash on Delivery (PKR)** anywhere in Pakistan.
@@ -377,4 +378,6 @@ npm run build && npm run check    # headless Chrome/Edge: every page + flows, fa
 # fashionist
 # fashionist
 # fashionist
+=======
+>>>>>>> 9b9ac02e5f2a4290975db134ea0156606cf9d7f9
 # haseeb
