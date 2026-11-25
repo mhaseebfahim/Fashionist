@@ -34,7 +34,7 @@ export default function Footer() {
               </div>
             ))}
             <div>
-              <p className="label mb-5 text-gold">{t('footer.contact')}</p>
+              <p className="label mb-4 text-gold">{t('footer.contact')}</p>
               <ul className="space-y-3 text-sm text-ivory/70">
                 <li><a href={`tel:${s?.store.phone?.replace(/\s/g, '')}`}>{s?.store.phone}</a></li>
                 <li><a href={`mailto:${s?.store.email}`}>{s?.store.email}</a></li>
